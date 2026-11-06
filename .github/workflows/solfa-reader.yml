@@ -1,0 +1,59 @@
+# Solfa Reader — test + build on every push; publish to GitHub Pages from master.
+# One-time setup by the repository owner: Settings → Pages → Build and deployment →
+# Source: "GitHub Actions". The site is then served at https://<owner>.github.io/<repo>/
+name: Solfa Reader
+
+on:
+  push:
+    paths:
+      - 'solfa-reader/**'
+      - '.github/workflows/solfa-reader.yml'
+  pull_request:
+    paths:
+      - 'solfa-reader/**'
+      - '.github/workflows/solfa-reader.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: solfa-reader-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: solfa-reader
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: solfa-reader/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Upload site for GitHub Pages
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: solfa-reader/dist
+
+  deploy:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -23,13 +23,13 @@ time: 4/4
 tempo: 84
 
 S: | m  :m  :f  :s  | s  :f  :m  :r  |
-A: | d  :d  :d  :t, | d  :r  :d  :t, |
-T: | s  :s  :l  :s  | s  :l  :s  :s  |
-B: | d  :d  :f, :s, | m, :r, :d, :s, |
+A: | d  :d  :l, :t, | d  :l, :d  :t, |
+T: | s  :s  :f  :r  | m  :r  :s  :s  |
+B: | d, :d, :r, :s, | d, :f, :d, :s, |
 W: Ry To-mpo ô, de-ra-in-ay i-an-ao
 
 S: | d' :t  :l  :s  | s  :-  :-  :-  ||
-A: | m  :r  :d  :d  | t, :-  :-  :-  ||
+A: | m  :r  :f  :d  | t, :-  :-  :-  ||
 T: | s  :s  :f  :m  | r  :-  :-  :-  ||
 B: | d  :s, :l, :d  | s, :-  :-  :-  ||
 ```
