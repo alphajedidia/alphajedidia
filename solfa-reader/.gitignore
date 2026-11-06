@@ -1,0 +1,9 @@
+node_modules/
+dist/
+# copied from node_modules by scripts/copy-tesseract-assets.mjs
+public/tesseract/
+# test / bench outputs
+tests/e2e/out/
+scripts/ocr-bench/out/
+*.log
+.DS_Store
