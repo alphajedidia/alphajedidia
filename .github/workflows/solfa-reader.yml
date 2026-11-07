@@ -1,10 +1,15 @@
-# Solfa Reader — test + build on every push; publish to GitHub Pages from master.
-# One-time setup by the repository owner: Settings → Pages → Build and deployment →
-# Source: "GitHub Actions". The site is then served at https://<owner>.github.io/<repo>/
+# Solfa Reader — test + build, publish to GitHub Pages from master.
+# Runs on pushes to master, pull requests and manual runs only (feature branches are tested
+# locally by the agents before every push — see ADR on hosting).
+# NOTE (2026-11-07): GitHub Actions jobs do not start on this account ("account is locked due to
+# a billing issue"). Until that is fixed, publish with Cloudflare Pages or Netlify (README).
+# One-time setup by the repository owner once Actions works: Settings → Pages → Build and
+# deployment → Source: "GitHub Actions". The site is then at https://<owner>.github.io/<repo>/
 name: Solfa Reader
 
 on:
   push:
+    branches: [master]
     paths:
       - 'solfa-reader/**'
       - '.github/workflows/solfa-reader.yml'

@@ -30,14 +30,26 @@ T: | s  :s  :f  :r  | m  :r  :s  :s  |
 B: | d, :d, :r, :s, | d, :f, :d, :s, |
 ```
 
-## Publish the website (one time, repository owner)
-1. Merge this work into `master`.
-2. On GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Every push to `master` that changes `solfa-reader/` rebuilds and publishes the site at
-   `https://<your-user>.github.io/<repository>/` (workflow: `.github/workflows/solfa-reader.yml`).
+## Publish the website (free, one time)
 
-Any static host also works (Netlify, Vercel, Cloudflare Pages): root directory `solfa-reader`,
-build command `npm run build`, output directory `dist`.
+The site is plain static files, so any free static host works. GitHub Actions cannot be used on
+this account right now (GitHub: "account is locked due to a billing issue"), so use a host that
+builds the site on its own machines:
+
+**Cloudflare Pages (recommended — free, unlimited traffic, has a data centre in Antananarivo)**
+1. Sign up at https://dash.cloudflare.com (free, no card needed) → *Workers & Pages* →
+   *Create* → *Pages* → *Connect to Git* → choose GitHub → repository `alphajedidia/alphajedidia`.
+2. Settings: **Production branch** `master` (or `claude/solfa-reader-apk-2frj02` to publish now),
+   **Framework preset** None, **Build command** `npm run build`, **Build output directory**
+   `dist`, **Root directory** `solfa-reader`.
+3. *Save and Deploy*. The site appears at `https://<project-name>.pages.dev`; every push updates it.
+
+**Netlify (alternative)**: *Add new site → Import an existing project → GitHub →* the repository,
+**Base directory** `solfa-reader` (the rest is read from `solfa-reader/netlify.toml`).
+
+**GitHub Pages (once the GitHub billing lock is solved)**: merge into `master`, then
+*Settings → Pages → Source: GitHub Actions*; `.github/workflows/solfa-reader.yml` publishes to
+`https://<user>.github.io/<repository>/`.
 
 ## For developers
 ```

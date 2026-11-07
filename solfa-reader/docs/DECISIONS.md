@@ -285,3 +285,15 @@ so the textarea keeps focus and caret; ⌫ ◀ ▶ fire on pointer-down and auto
 chromatic key is a one-shot shift showing Curwen spellings (`de re fe se le` / `ra ma la ta`).
 **Consequences.** No focus-trap code to maintain; the editor must set `inputMode="none"` while
 the keypad is shown so the phone keyboard stays closed.
+
+### ADR-027 — Hosting without GitHub Actions (Cloudflare Pages first)
+*2026-11-07 · accepted · orchestrator · amends ADR-010*
+**Context.** Every GitHub Actions job fails before starting: "The job was not started because your
+account is locked due to a billing issue." The user cannot pay for services.
+**Decision.** Recommend **Cloudflare Pages** (free, unlimited bandwidth, edge location in
+Antananarivo, builds from the GitHub repo on Cloudflare's machines); Netlify as alternative
+(`solfa-reader/netlify.toml`, `.node-version`). `public/_headers` sets cache rules on both.
+The GitHub workflow now runs only for `master`, pull requests and manual runs, so feature-branch
+pushes stop showing failures; agents run typecheck/tests/build locally before every push.
+GitHub Pages stays possible once the billing lock is lifted.
+**Consequences.** Publishing needs a one-time sign-up on Cloudflare (or Netlify) by the user.
