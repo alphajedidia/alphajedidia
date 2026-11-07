@@ -11,11 +11,11 @@ import { assignReadings, composeStrip } from './rules/strip';
 import { pageSymbols, pageText } from './rules/tess';
 
 /** Longest side of the working image (memory/time budget on phones). */
-const MAX_WORK_SIDE = 2600;
+const MAX_WORK_SIDE = 3400;
 /** Pixel budget when upscaling small text. */
-const MAX_WORK_PIXELS = 9_000_000;
+const MAX_WORK_PIXELS = 12_000_000;
 /** Character height we try to work at, and the x-height we give Tesseract. */
-const TARGET_CHAR_H = 26;
+const TARGET_CHAR_H = 30;
 const ENGINE_X_HEIGHT = 30;
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
@@ -83,7 +83,7 @@ export async function prepareWorkImage(
   await tick();
   const charH0 = estimateCharHeight(labelComponents(first).components);
   progress(0.3);
-  if (charH0 > 0 && charH0 < TARGET_CHAR_H * 0.7) {
+  if (charH0 > 0 && charH0 < TARGET_CHAR_H * 0.85) {
     const up = Math.min(TARGET_CHAR_H / charH0, Math.sqrt(MAX_WORK_PIXELS / (srcW * srcH)) / scale, 4);
     if (up > 1.15) {
       scale *= up;

@@ -14,8 +14,11 @@ export interface EngineProgress {
 
 type TesseractModule = typeof Tesseract;
 
-/** Letters that can appear in a note strip (notes, chromatic vowels, voice labels). */
-export const MUSIC_WHITELIST = 'drmfsltaeioSATB';
+/**
+ * Letters that can appear in a note strip (notes, chromatic vowels, voice labels), plus the
+ * apostrophe: in bold or blurred print the octave mark touches its letter (`d'` is one blob).
+ */
+export const MUSIC_WHITELIST = "drmfsltaeioSATB'";
 
 let workerPromise: Promise<Tesseract.Worker> | null = null;
 let worker: Tesseract.Worker | null = null;

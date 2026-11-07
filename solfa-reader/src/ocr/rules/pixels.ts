@@ -15,6 +15,21 @@ export function toGray(rgba: Uint8ClampedArray | Uint8Array, width: number, heig
 }
 
 /**
+ * RGBA → grey using the brightest channel (HSV value). Coloured paper (pink, yellowed), stains
+ * and coloured pen or highlighter marks become light, while black print stays dark.
+ */
+export function toGrayMax(rgba: Uint8ClampedArray | Uint8Array, width: number, height: number): GrayImage {
+  const n = width * height;
+  const out = new Uint8Array(n);
+  for (let i = 0, j = 0; i < n; i++, j += 4) {
+    const a = rgba[j + 3] / 255;
+    const v = Math.max(rgba[j], rgba[j + 1], rgba[j + 2]);
+    out[i] = Math.round(v * a + 255 * (1 - a));
+  }
+  return { width, height, data: out };
+}
+
+/**
  * Flatten uneven lighting (shadows, phone flash): estimate the paper brightness on a coarse
  * grid (a high percentile per cell), smooth it, and divide it out.
  */

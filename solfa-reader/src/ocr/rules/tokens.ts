@@ -92,6 +92,13 @@ export function buildRowTokens(
       else if (n.changed) reason = 'corrected-letter';
       else if (n.conf < 0.6) reason = 'low-confidence';
       tokens.push({ kind: 'note', text: n.text, box: it.box, conf: n.conf, reason, alt: it.alt });
+      // An octave mark glued to its letter was read inside the cluster (`d'`).
+      const read = (raw.match(/['’`]/g) ?? []).length;
+      const ups = read > 0 ? read : it.gluedUp && n.text !== 'f' && n.text !== 'l' ? 1 : 0;
+      for (let k = 0; k < Math.min(2, ups); k++) {
+        const b = { ...it.box, x0: it.box.x1, x1: it.box.x1 + 1 };
+        tokens.push({ kind: 'mark', text: "'", box: b, conf: Math.min(0.7, n.conf), reason: 'glued-octave' });
+      }
       continue;
     }
     const text = MARK_TEXT[it.kind];

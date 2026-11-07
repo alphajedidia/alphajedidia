@@ -48,7 +48,7 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
       continue;
     }
     const t = rd.texts.get(row.index);
-    const text = (t?.text ?? '').replace(/\s+/g, ' ').trim();
+    const text = cleanTextRow(t?.text ?? '');
     if (!text) continue;
     const kind = classifyRowText(text);
     if (kind === 'music') {
@@ -131,4 +131,16 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
     warnings.push('handwriting-mode');
   }
   return { text: doc.text, lines: doc.lines, uncertain, confidence, warnings: [...new Set(warnings)] };
+}
+
+/**
+ * Clean a text row: drop dotted leader lines (`hmmm……………`), rules drawn with dashes or
+ * underscores, and rows with almost no letters (stray marks, arrows).
+ */
+export function cleanTextRow(raw: string): string {
+  const t = raw
+    .replace(/[.·…,:;'`_~\-–—=]{3,}/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return (t.match(/\p{L}/gu) ?? []).length >= 2 ? t : '';
 }

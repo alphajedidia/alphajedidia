@@ -11,7 +11,7 @@ describe('engine — self-hosted assets', () => {
   });
 
   it('whitelists only sol-fa letters and voice labels for note strips', () => {
-    expect([...MUSIC_WHITELIST].sort().join('')).toBe('ABSTadefilmorst');
+    expect([...MUSIC_WHITELIST].sort().join('')).toBe("'ABSTadefilmorst");
   });
 
   it('has no CDN URL anywhere in the OCR module', () => {

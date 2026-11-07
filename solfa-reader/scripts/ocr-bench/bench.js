@@ -1,5 +1,5 @@
 // Dev-only page driven by run.mjs: degrade a rendered page image, run the real OCR pipeline.
-import { recognizeSolfa, terminateOcr } from '/src/ocr/index.ts';
+import { recognizeSolfa, terminateOcr, loadImageToCanvas, cropCanvas, warpQuad, detectPageQuad } from '/src/ocr/index.ts';
 import { debugOverlay } from '/scripts/ocr-bench/debug.js';
 import { parseSolfa, formatSolfa } from '/src/core/index.ts';
 
@@ -117,5 +117,36 @@ window.__ocr = async (dataUrl, d = {}) => {
   };
 };
 window.__terminate = () => terminateOcr();
+
+// Real photos: load like the app (EXIF, ≤ 2400 px), then crop rect / straighten quad / auto quad.
+window.__ocrReal = async (url, o = {}) => {
+  const blob = await (await fetch(url)).blob();
+  const full = await loadImageToCanvas(blob);
+  const k = full.width / o.srcWidth;
+  let c = full;
+  let quad = null;
+  if (o.mode === 'quad' && o.quad) c = warpQuad(full, o.quad.map(([x, y]) => ({ x: x * k, y: y * k })));
+  else if (o.mode === 'auto') {
+    quad = detectPageQuad(full);
+    c = quad ? warpQuad(full, quad) : full;
+  } else if (o.rect) c = cropCanvas(full, { x: o.rect.x * k, y: o.rect.y * k, w: o.rect.w * k, h: o.rect.h * k });
+  const t0 = performance.now();
+  const res = await recognizeSolfa(c, { handwriting: !!o.handwriting });
+  let parse;
+  try {
+    const p = parseSolfa(res.text);
+    parse = { errors: p.diagnostics.filter((x) => x.severity === 'error').length, codes: [...new Set(p.diagnostics.filter((x) => x.severity !== 'info').map((x) => x.code))] };
+  } catch (e) {
+    parse = { errors: -1, codes: [String(e)] };
+  }
+  return { text: res.text, warnings: res.warnings, uncertain: res.uncertain.length, ms: Math.round(performance.now() - t0), size: [c.width, c.height], quad, parse, png: o.png ? c.toDataURL('image/png') : null };
+};
+window.__debugReal = async (url, o = {}) => {
+  const blob = await (await fetch(url)).blob();
+  const full = await loadImageToCanvas(blob);
+  const k = full.width / o.srcWidth;
+  const c = o.mode === 'quad' && o.quad ? warpQuad(full, o.quad.map(([x, y]) => ({ x: x * k, y: y * k }))) : cropCanvas(full, { x: o.rect.x * k, y: o.rect.y * k, w: o.rect.w * k, h: o.rect.h * k });
+  return debugOverlay(c, !!o.handwriting);
+};
 window.__debug = async (dataUrl, d = {}) => debugOverlay(await degrade(await loadDataUrl(dataUrl), d), !!d.handwriting);
 document.getElementById('status').textContent = 'ready';

@@ -5,7 +5,8 @@ import { terminateEngine } from './engine';
 import { recognizeSolfaImpl } from './recognize';
 
 export * from './types';
-export { loadImageToCanvas, rotateCanvas, cropCanvas, deskewCanvas } from './image';
+export { loadImageToCanvas, rotateCanvas, cropCanvas, deskewCanvas, warpQuad, detectPageQuad } from './image';
+export type { Point } from './rules/perspective';
 
 /** Full pipeline: image → aligned .solfa text with uncertainty. A-08 */
 export async function recognizeSolfa(image: HTMLCanvasElement, opts?: RecognizeOptions): Promise<RecognitionResult> {

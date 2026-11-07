@@ -37,8 +37,42 @@ export function clusterColumns(xs: readonly number[], tol: number): number[][] {
   return out;
 }
 
+const isStroke = (t: Token | undefined, xh = 0) =>
+  !!t && t.kind === 'note' && t.text === 'l' && (t.alt === 'bar' || (xh > 0 && t.box.x1 - t.box.x0 <= 0.5 * xh));
+const fillsBeat = (t: Token | undefined) => !!t && (t.kind === 'note' || (t.kind === 'mark' && t.text === '-'));
+
+/**
+ * Many books print the medium accent as a short bar `I`, which has the shape of `l` (lah). A
+ * lone stroke glued between two items of a beat (`- I s`, `: I d'`) cannot be a note (two notes
+ * need a division mark), so it is a separator; strokes standing in the same column in most
+ * voices (or in a column where one of them was proven a separator) are separators too.
+ */
+export function promoteMediumStrokes(rows: readonly Token[][], xh: number, tolerance = 1): Token[][] {
+  const tol = tolerance * Math.max(1, xh);
+  const out = rows.map((r) => r.map((t) => ({ ...t })));
+  const toSep = (t: Token, reason: string) => Object.assign(t, { kind: 'sep', text: '!', conf: Math.min(t.conf, 0.75), reason, alt: undefined });
+  const proven: number[] = [];
+  for (const r of out) {
+    r.forEach((t, i) => {
+      if (isStroke(t, xh) && (fillsBeat(r[i - 1]) || fillsBeat(r[i + 1]))) {
+        proven.push(tokenX(t));
+        toSep(t, 'lah-as-medium');
+      }
+    });
+  }
+  const strokes = out.flatMap((r, v) => r.filter(isStroke).map((t) => ({ t, v, x: tokenX(t) })));
+  for (const g of clusterColumns(strokes.map((s) => s.x), tol)) {
+    const members = strokes.filter((s) => s.x >= g[0] - 1e-6 && s.x <= g[g.length - 1] + 1e-6);
+    const voices = new Set(members.map((s) => s.v)).size;
+    const near = proven.some((x) => x >= g[0] - tol && x <= g[g.length - 1] + tol);
+    if (near || (rows.length >= 3 && voices >= Math.ceil(0.75 * rows.length))) members.forEach((s) => toSep(s.t, 'lah-as-medium'));
+  }
+  return out;
+}
+
 /** Align the token rows of one system. */
-export function alignSystem(rows: readonly Token[][], xh: number, opts: AlignOptions = {}): AlignedSystem {
+export function alignSystem(rows0: readonly Token[][], xh: number, opts: AlignOptions = {}): AlignedSystem {
+  const rows = promoteMediumStrokes(rows0, xh, opts.tolerance);
   const n = rows.length;
   const tol = (opts.tolerance ?? 1.0) * Math.max(1, xh);
   const seps: SepRef[] = [];

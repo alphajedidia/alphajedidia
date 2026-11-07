@@ -1,7 +1,8 @@
 // Turn the connected components of one row into row items (A-06): pair dots into colons,
 // strokes + dots into `!`, i-dots into letters, adjacent bars into double bars, and keep the
 // small marks (dots, commas, apostrophes, dashes) that a text engine tends to drop.
-import { bh, bw, cx, median, union, unionAll, type Box, type Component } from './geometry';
+import { bh, bw, cx, cy, median, union, unionAll, type Box, type Component } from './geometry';
+import type { Labelled } from './components';
 import { classifyShape, looksLikeLah, type RowMetrics, type Shape, type ShapeOptions } from './symbols';
 
 export type ItemKind =
@@ -26,6 +27,8 @@ export interface RowItem {
   alt?: 'l' | 'bar';
   /** Reason code when the geometry was ambiguous. */
   reason?: string;
+  /** An octave-up mark is glued to the letter (one blob): `d'` in bold print. */
+  gluedUp?: boolean;
 }
 
 interface Tagged {
@@ -113,8 +116,15 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
       });
     }
   }
-  // Low marks: a comma reaches below the line the colon dots sit on; a dot does not.
   const ref = dotLine.length >= 2 ? median(dotLine) : m.baseline;
+  // Unpaired dots floating clearly above the dot line, below the x-line, are stubby hold
+  // dashes (bold or blurred print); a division dot sits on the line like a colon's bottom dot.
+  for (const t of [...of('dot-low'), ...of('dot-high')]) {
+    const lift = (ref - t.c.y1) / xh;
+    const mid = (m.baseline - cy(t.c)) / xh;
+    if (lift >= 0.18 && mid < 0.68) t.s = { kind: 'dash', conf: 0.55 };
+  }
+  // Low marks: a comma reaches below the line the colon dots sit on; a dot does not.
   for (const t of [...of('dot-low'), ...of('comma')]) {
     const desc = (t.c.y1 - ref) / xh;
     const aspect = bh(t.c) / Math.max(1, bw(t.c));
@@ -182,4 +192,29 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
 /** Count separators (bars, colons, `!`) among items: the main cue that a row is music. */
 export function countSeparators(items: readonly RowItem[]): number {
   return items.filter((i) => i.kind === 'bar' || i.kind === 'colon' || i.kind === 'medium').length;
+}
+
+/**
+ * Does a letter blob carry a glued octave mark at its top right? Looks for columns at the right
+ * whose ink lies only in the ascender zone (above 0.75 x-height and reaching 1.2 x-height), the
+ * shape of an apostrophe touching `d`, `m`, `s`… (`f` has such a hook too: the caller skips it).
+ */
+export function hasGluedApostrophe(lab: Labelled, c: Component, m: RowMetrics): boolean {
+  const xh = Math.max(1, m.xHeight);
+  const hiLimit = m.baseline - 0.75 * xh;
+  const reach = m.baseline - 1.2 * xh;
+  let run = 0;
+  for (let x = c.x1 - 1; x >= c.x0; x--) {
+    let top = Infinity;
+    let bottom = -Infinity;
+    for (let y = c.y0; y < c.y1; y++) {
+      if (lab.labels[y * lab.width + x] !== c.id) continue;
+      top = Math.min(top, y);
+      bottom = Math.max(bottom, y);
+    }
+    if (top === Infinity) continue;
+    if (bottom <= hiLimit && top <= reach) run++;
+    else break;
+  }
+  return run >= Math.max(2, 0.12 * xh) && run <= 0.6 * xh && run < 0.5 * (c.x1 - c.x0);
 }

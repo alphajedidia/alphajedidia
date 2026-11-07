@@ -74,7 +74,8 @@ export function guessFromShape(g: NoteGeometry): string {
 
 /** Normalise the OCR reading of one note cluster into a valid note. */
 export function normalizeNote(raw: string, conf: number, geo: NoteGeometry = {}): NoteReading {
-  let s = raw.replace(/\s+/g, '');
+  // Octave marks read inside the cluster are handled by the caller.
+  let s = raw.replace(/[\s'’`]+/g, '');
   const original = s;
   if (geo.lahShape) return { text: 'l', conf: Math.max(conf, 0.75), changed: s !== 'l' };
   for (const [from, to] of SEQ_MAP) s = s.split(from).join(to);

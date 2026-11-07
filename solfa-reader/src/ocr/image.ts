@@ -2,7 +2,8 @@
 // live in ./rules/pixels.ts so they are unit-tested in node.
 import type { Rect } from './types';
 import type { Bitmap, GrayImage } from './rules/geometry';
-import { binarizeSauvola, boxBlur, estimateNoise, estimateSkew, flattenIllumination, majorityFilter, toGray } from './rules/pixels';
+import { binarizeSauvola, boxBlur, estimateNoise, estimateSkew, flattenIllumination, majorityFilter, otsuThreshold, toGray, toGrayMax } from './rules/pixels';
+import { findPageQuad, quadSize, warpRgba, type Point } from './rules/perspective';
 
 /** Create a canvas (DOM). */
 export function createCanvas(w: number, h: number): HTMLCanvasElement {
@@ -18,8 +19,11 @@ function ctx2d(c: HTMLCanvasElement): CanvasRenderingContext2D {
   return ctx;
 }
 
-/** Decode an image file (respecting EXIF orientation) into a canvas no larger than maxSide. */
-export async function loadImageToCanvas(file: Blob, maxSide = 2400): Promise<HTMLCanvasElement> {
+/**
+ * Decode an image file (respecting EXIF orientation) into a canvas no larger than maxSide.
+ * 4000 px keeps a 12 MP phone photo whole: small print on a full page needs every pixel.
+ */
+export async function loadImageToCanvas(file: Blob, maxSide = 4000): Promise<HTMLCanvasElement> {
   let source: CanvasImageSource;
   let w: number;
   let h: number;
@@ -109,10 +113,47 @@ export function scaleCanvas(canvas: HTMLCanvasElement, factor: number): HTMLCanv
   return c;
 }
 
-/** Grey pixels of a canvas. */
+/** Grey pixels of a canvas (brightest channel: ignores paper tint and coloured pen marks). */
 export function canvasToGray(canvas: HTMLCanvasElement): GrayImage {
   const d = ctx2d(canvas).getImageData(0, 0, canvas.width, canvas.height);
-  return toGray(d.data, canvas.width, canvas.height);
+  return toGrayMax(d.data, canvas.width, canvas.height);
+}
+
+/**
+ * Straighten a photographed page: `corners` = top-left, top-right, bottom-right, bottom-left
+ * (canvas pixels). Returns a new canvas whose size follows the quad's side lengths.
+ */
+export function warpQuad(canvas: HTMLCanvasElement, corners: readonly Point[]): HTMLCanvasElement {
+  const { width, height } = quadSize(corners);
+  const src = ctx2d(canvas).getImageData(0, 0, canvas.width, canvas.height);
+  const out = createCanvas(width, height);
+  const octx = ctx2d(out);
+  const img = octx.createImageData(width, height);
+  img.data.set(warpRgba(src.data, canvas.width, canvas.height, corners, width, height));
+  octx.putImageData(img, 0, 0);
+  return out;
+}
+
+/**
+ * Find the outline of the (bright) page in a photo, as 4 corners for warpQuad (TL, TR, BR, BL),
+ * or null when no page stands out from the background (then use the whole image).
+ */
+export function detectPageQuad(canvas: HTMLCanvasElement): Point[] | null {
+  const f = Math.max(1, Math.max(canvas.width, canvas.height) / 400);
+  const small = scaleCanvas(canvas, 1 / f);
+  const d = ctx2d(small).getImageData(0, 0, small.width, small.height);
+  const g = toGray(d.data, small.width, small.height);
+  const t = otsuThreshold(g);
+  const paper = new Uint8Array(g.data.length);
+  // Paper = bright and not strongly coloured (wooden table, cloth, skin are saturated).
+  for (let i = 0, j = 0; i < g.data.length; i++, j += 4) {
+    const mx = Math.max(d.data[j], d.data[j + 1], d.data[j + 2]);
+    const mn = Math.min(d.data[j], d.data[j + 1], d.data[j + 2]);
+    paper[i] = g.data[i] > t && mx - mn < 0.45 * mx ? 1 : 0;
+  }
+  const q = findPageQuad({ width: small.width, height: small.height, data: paper });
+  if (!q || q.coverage > 0.97) return null;
+  return q.corners.map((p) => ({ x: p.x * (canvas.width / small.width), y: p.y * (canvas.height / small.height) }));
 }
 
 /** Draw a bitmap (ink black on white) into a canvas, scaled by `scale`, with a white margin. */

@@ -4,7 +4,7 @@
 import { labelComponents, estimateCharHeight, splitPageComponents, type Labelled } from './components';
 import { bh, cx, median, yOverlap, type Bitmap, type Box, type Component } from './geometry';
 import { segmentRows, type RowBand } from './layout';
-import { countSeparators, groupRowItems, type RowItem } from './marks';
+import { countSeparators, groupRowItems, hasGluedApostrophe, type RowItem } from './marks';
 import type { StripCluster } from './strip';
 import { measureRow, type RowMetrics } from './symbols';
 
@@ -55,6 +55,9 @@ export function analyzePage(bitmap: Bitmap, opts: PageOptions = {}): PageAnalysi
     const metrics = first[i]?.measured ? first[i] : measureRow(band.comps, xHeight);
     if (!metrics) return;
     const items = groupRowItems(band.comps, metrics, { loose });
+    for (const it of items) {
+      if (it.kind === 'note' && it.comps.length === 1 && hasGluedApostrophe(labelled, it.comps[0], metrics)) it.gluedUp = true;
+    }
     addRuledBars(items, band, metrics, split.vertical);
     items.sort((a, b) => cx(a.box) - cx(b.box));
     const seps = countSeparators(items);
