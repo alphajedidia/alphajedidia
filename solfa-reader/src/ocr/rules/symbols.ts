@@ -125,11 +125,14 @@ export function classifyShape(c: Box & { area: number }, m: RowMetrics, opts: Sh
  * Is a glyph-sized box a lone `l` (lah) rather than a bar line? `l` stands on the baseline and
  * is ascender-high; a printed bar is taller and usually reaches below the baseline.
  */
-export function looksLikeLah(b: Box, m: RowMetrics): boolean {
+export function looksLikeLah(b: Box & { area?: number }, m: RowMetrics): boolean {
   const xh = Math.max(1, m.xHeight);
   const h = bh(b) / xh;
+  const asc = m.ascHeight / xh;
   const bottom = (m.baseline - b.y1) / xh;
-  return Math.abs(bottom) <= 0.12 && h <= m.ascHeight / xh + 0.3 && bw(b) / xh <= 0.45;
+  // A solid stroke: `t` (cross bar) and `r` (arm) fill much less of their box.
+  const fill = b.area !== undefined ? b.area / Math.max(1, bw(b) * bh(b)) : 1;
+  return Math.abs(bottom) <= 0.12 && h >= Math.max(1.15, 0.85 * asc) && h <= asc + 0.3 && bw(b) / xh <= 0.42 && fill >= 0.55;
 }
 
 /** Glyph metrics in x-height units, for guessing a letter when OCR gave nothing usable. */

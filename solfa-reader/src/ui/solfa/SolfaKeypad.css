@@ -4,7 +4,7 @@
   gap: 6px;
   padding: var(--sr-space-2) calc(var(--sr-space-2) + var(--sr-safe-right))
     calc(var(--sr-space-2) + var(--sr-safe-bottom)) calc(var(--sr-space-2) + var(--sr-safe-left));
-  background: var(--sr-surface-2);
+  background: var(--sr-keypad-bg);
   border-top: 1px solid var(--sr-border);
   user-select: none;
   -webkit-user-select: none;

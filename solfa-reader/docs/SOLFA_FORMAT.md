@@ -57,6 +57,8 @@ by `:` `.` or `=`, then a space. (Notes are always lower-case, so there is no co
 
 Unlabelled lines take voices **by order** inside their system, using the `voices:` header
 (default `S A T B`). A system with fewer lines takes the first voices of that list.
+If a **label repeats** inside a group of lines (e.g. a second `S:` with no blank line before it),
+a new system starts at that line (ADR-019).
 
 ## 3. Headers
 
@@ -180,15 +182,19 @@ that setting is saved with the song.
 | `unknown-voice` | warning | more voice lines in a system than voices |
 | `bad-key` | warning | key value not understood (key unchanged) |
 | `bad-tempo` | warning | tempo not a number in range (default kept) |
+| `bad-time` | warning | `time:` value not understood (time inferred instead) |
 | `empty-song` | error | no voice lines at all |
+| `internal-error` | error | safety net: the parser hit an unexpected state (should never happen; please report) |
 
 Every diagnostic carries `line`, `col`, `endCol` (0-based, end exclusive) so the editor can
 underline it.
 
 ## 9. Canonical formatting
 `formatSolfa(text)` re-writes voice lines of each system so that beats line up in columns
-(separators at the same column in every voice), keeps headers, words and comments as they are,
-and uses single spaces around separators. The OCR produces text that is already aligned this way
+(separators at the same column in every voice), keeps headers, words and comments as they are.
+Style (ADR-020): a bar line `|`/`||` is followed by one space; `:` `!` `¦` are attached to the
+beat that follows; each beat column is padded to its widest text across the voices, then one
+space before the next separator; labels are padded to one width. The OCR produces text that is already aligned this way
 (it builds its own beat grid), so its uncertainty columns stay valid; the editor offers a
 "Tidy" button that calls `formatSolfa`.
 

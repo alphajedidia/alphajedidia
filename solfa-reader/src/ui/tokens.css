@@ -101,6 +101,7 @@
   --sr-surface: #fffdf8;
   --sr-surface-2: #efe9dc;
   --sr-surface-3: #e4dccb;
+  --sr-keypad-bg: #ebe4d5;
   --sr-border: #ddd4c2;
   --sr-border-strong: #857c6c;
   --sr-text: #1d2330;
@@ -167,6 +168,8 @@
     --sr-surface: #1c2028;
     --sr-surface-2: #262b35;
     --sr-surface-3: #313744;
+  --sr-keypad-bg: #0f1216;
+    --sr-keypad-bg: #0f1216;
     --sr-border: #343a46;
     --sr-border-strong: #7d8596;
     --sr-text: #ece7dc;
@@ -233,6 +236,7 @@
   --sr-surface: #1c2028;
   --sr-surface-2: #262b35;
   --sr-surface-3: #313744;
+  --sr-keypad-bg: #0f1216;
   --sr-border: #343a46;
   --sr-border-strong: #7d8596;
   --sr-text: #ece7dc;

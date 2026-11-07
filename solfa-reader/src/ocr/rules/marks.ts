@@ -1,7 +1,7 @@
 // Turn the connected components of one row into row items (A-06): pair dots into colons,
 // strokes + dots into `!`, i-dots into letters, adjacent bars into double bars, and keep the
 // small marks (dots, commas, apostrophes, dashes) that a text engine tends to drop.
-import { bh, bw, cx, median, union, unionAll, type Box, type Component } from './geometry';
+import { bh, bw, cx, cy, median, union, unionAll, type Box, type Component } from './geometry';
 import { classifyShape, looksLikeLah, type RowMetrics, type Shape, type ShapeOptions } from './symbols';
 
 export type ItemKind =
@@ -50,11 +50,18 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
     const cs = ts.flatMap((t) => t.members);
     items.push({ kind, box: boxOf(cs), comps: cs, conf, ...extra });
   };
-  const nearAbove = (low: Tagged, cands: Tagged[], maxDx: number): Tagged | undefined => {
+  const nearAbove = (low: Tagged, cands: Tagged[], maxDx: number, colon = false): Tagged | undefined => {
     let best: Tagged | undefined;
     let bestD = Infinity;
     for (const h of cands) {
       if (h.used) continue;
+      if (colon) {
+        // The top dot of a colon sits at the x-line and looks like the bottom dot; an apostrophe
+        // (octave mark) sits higher, e.g. `d'.r` must not become `d:r`.
+        const mid = (m.baseline - cy(h.c)) / xh;
+        const ratio = h.c.area / Math.max(1, low.c.area);
+        if (mid > 1.12 * L || ratio < 0.35 || ratio > 2.8) continue;
+      }
       const dx = Math.abs(cx(h.c) - cx(low.c));
       if (dx > maxDx) continue;
       if (h.c.y1 > low.c.y0 + 0.1 * xh) continue; // must be above
@@ -95,7 +102,7 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
   // (Only dot-shaped upper parts: an apostrophe above a following `.` is `d'.r`, not a colon.)
   const dotLine: number[] = [];
   for (const dot of [...of('dot-low'), ...of('comma')]) {
-    const hi = nearAbove(dot, of('dot-high'), 0.45 * xh * L);
+    const hi = nearAbove(dot, of('dot-high'), 0.45 * xh * L, true);
     if (hi) {
       const semicolon = dot.s.kind === 'comma';
       if (!semicolon) dotLine.push(dot.c.y1);

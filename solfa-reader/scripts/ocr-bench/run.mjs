@@ -116,6 +116,10 @@ async function main() {
         systemsOk: sc.systemsPred === sc.systemsTruth && sc.voicesOk,
         keyOk: sc.keyOk,
         timeOk: sc.timeOk,
+        parseErrors: res.parse.errors,
+        parseWarnings: res.parse.warnings,
+        parseCodes: res.parse.codes,
+        tidy: res.parse.tidy,
         ms: res.durationMs,
         uncertain: res.uncertain.length,
         warnings: res.warnings,
@@ -123,7 +127,7 @@ async function main() {
       };
       rows.push(row);
       console.log(
-        `${row.set.padEnd(8)} ${row.fixture.padEnd(17)} ${row.font.padEnd(16)} ${row.deg.padEnd(11)} cells ${pct(row.accuracy).padStart(6)}  content ${pct(row.content).padStart(6)}  seps ${pct(row.seps).padStart(6)}  sys ${row.systemsOk ? 'ok' : 'NO'}  key ${row.keyOk ? 'ok' : 'NO'}  ${row.ms} ms`,
+        `${row.set.padEnd(8)} ${row.fixture.padEnd(17)} ${row.font.padEnd(16)} ${row.deg.padEnd(11)} cells ${pct(row.accuracy).padStart(6)}  content ${pct(row.content).padStart(6)}  seps ${pct(row.seps).padStart(6)}  sys ${row.systemsOk ? 'ok' : 'NO'}  key ${row.keyOk ? 'ok' : 'NO'}  parse ${row.parseErrors === 0 ? 'ok' : 'ERR'}${row.parseWarnings ? `(${row.parseCodes.join(',')})` : ''}${row.tidy ? '' : ' untidy'}  ${row.ms} ms`,
       );
       if (args.verbose && row.errors.length) console.log('   ', row.errors.slice(0, 12).join('\n    '));
       if (args.verbose) console.log(res.text);
@@ -145,9 +149,9 @@ async function main() {
     const agg = (list) => {
       const cells = list.reduce((s, r) => s + r.cells, 0);
       const correct = list.reduce((s, r) => s + r.correct, 0);
-      return { n: list.length, cells, acc: cells ? correct / cells : 0, ms: Math.round(list.reduce((s, r) => s + r.ms, 0) / Math.max(1, list.length)) };
+      return { n: list.length, cells, acc: cells ? correct / cells : 0, perr: list.filter((r) => r.parseErrors !== 0).length, ms: Math.round(list.reduce((s, r) => s + r.ms, 0) / Math.max(1, list.length)) };
     };
-    const lines = ['', '| Set | Variant | Pages | Beat cells | Correct | Mean time |', '|---|---|---|---|---|---|'];
+    const lines = ['', '| Set | Variant | Pages | Beat cells | Correct | Parse errors | Mean time |', '|---|---|---|---|---|---|---|'];
     const groups = new Map();
     for (const r of rows) {
       const k = `${r.set}|${r.deg}`;
@@ -157,13 +161,13 @@ async function main() {
     for (const [k, list] of groups) {
       const [set, deg] = k.split('|');
       const a = agg(list);
-      lines.push(`| ${set} | ${deg} | ${a.n} | ${a.cells} | ${pct(a.acc)} | ${a.ms} ms |`);
+      lines.push(`| ${set} | ${deg} | ${a.n} | ${a.cells} | ${pct(a.acc)} | ${a.perr} | ${a.ms} ms |`);
     }
     for (const set of ['clean', 'degraded']) {
       const list = rows.filter((r) => r.set === set);
       if (list.length) {
         const a = agg(list);
-        lines.push(`| **${set} total** | | ${a.n} | ${a.cells} | **${pct(a.acc)}** | ${a.ms} ms |`);
+        lines.push(`| **${set} total** | | ${a.n} | ${a.cells} | **${pct(a.acc)}** | ${a.perr} | ${a.ms} ms |`);
       }
     }
     const fxLines = ['', '| Fixture | Clean pages | Correct (clean) |', '|---|---|---|'];

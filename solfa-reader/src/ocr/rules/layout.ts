@@ -149,42 +149,51 @@ export function groupSystems(
   const agree: number[] = [];
   for (let i = 0; i + 1 < n; i++) agree.push(columnAgreement(rows[i].seps, rows[i + 1].seps, 0.9 * xh));
 
-  if (linked.some(Boolean)) {
-    const groups: number[][] = [[0]];
-    for (let i = 0; i + 1 < n; i++) {
-      const g = groups[groups.length - 1];
-      if (linked[i] && g.length < maxVoices) g.push(i + 1);
-      else groups.push([i + 1]);
-    }
-    return groups;
-  }
-  if (n <= maxVoices) {
+  // Forced decisions from ruled bar lines: a rule crossing both rows joins them; two ruled
+  // rows that no rule connects (and no lyrics row interrupts) are in different systems.
+  const ruled = rows.map((r) => rules.some((x) => yOverlap(x, r.box) >= 0.5 * bh(r.box)));
+  const textBetween = (i: number) => textRows.some((t) => cy(t) > rows[i].box.y1 && cy(t) < rows[i + 1].box.y0);
+  const forced: ('join' | 'break' | null)[] = gaps.map((_, i) =>
+    linked[i] ? 'join' : ruled[i] && ruled[i + 1] && !textBetween(i) ? 'break' : null,
+  );
+  const fits = (isBreak: (i: number) => boolean) =>
+    forced.every((f, i) => f === null || (f === 'break') === isBreak(i));
+
+  if (n <= maxVoices && fits(() => false) && !forced.includes('break')) {
     // One system unless one gap is clearly larger than all the others.
     const mx = Math.max(...gaps);
     const rest = gaps.filter((_, i) => i !== gaps.indexOf(mx));
     const others = rest.length ? Math.max(...rest) : 0;
-    if (rest.length === 0 || mx < 1.6 * others || agree[gaps.indexOf(mx)] >= 0.8) return [rows.map((_, i) => i)];
+    if (rest.length === 0 || mx < 1.6 * others || agree[gaps.indexOf(mx)] >= 0.8 || forced.every((f) => f === 'join')) {
+      return [rows.map((_, i) => i)];
+    }
   }
   let bestSize = 0;
   for (let size = Math.min(maxVoices, n); size >= 2; size--) {
+    const isBreak = (i: number) => (i + 1) % size === 0;
+    if (!fits(isBreak)) continue;
     const breaks: number[] = [];
     const inside: number[] = [];
-    for (let i = 0; i + 1 < n; i++) ((i + 1) % size === 0 ? breaks : inside).push(gaps[i]);
-    if (breaks.length === 0 || inside.length === 0) continue;
-    const insideAgree = agree.filter((_, i) => (i + 1) % size !== 0);
-    const meanAgree = insideAgree.reduce((s, v) => s + v, 0) / insideAgree.length;
-    if (Math.min(...breaks) >= 1.12 * Math.max(...inside) && meanAgree >= 0.5) {
+    gaps.forEach((g, i) => {
+      if (forced[i] === null) (isBreak(i) ? breaks : inside).push(g);
+    });
+    const insideAgree = agree.filter((_, i) => !isBreak(i));
+    const meanAgree = insideAgree.length ? insideAgree.reduce((a, v) => a + v, 0) / insideAgree.length : 1;
+    const clear = breaks.length === 0 || inside.length === 0 || Math.min(...breaks) >= 1.12 * Math.max(...inside);
+    const anyBreak = gaps.some((_, i) => isBreak(i));
+    if (anyBreak && clear && meanAgree >= 0.5 && (breaks.length > 0 || forced.some((f) => f !== null))) {
       bestSize = size;
       break;
     }
   }
   if (bestSize === 0) {
-    // Fallback: break at gaps much larger than the smallest ones.
+    // Fallback: forced decisions, else break at gaps much larger than the smallest ones.
     const base = Math.min(...gaps);
     const groups: number[][] = [[0]];
     for (let i = 0; i + 1 < n; i++) {
       const g = groups[groups.length - 1];
-      if (gaps[i] <= 1.45 * base && g.length < maxVoices) g.push(i + 1);
+      const join = forced[i] === 'join' || (forced[i] === null && gaps[i] <= 1.45 * base);
+      if (join && g.length < maxVoices) g.push(i + 1);
       else groups.push([i + 1]);
     }
     return groups;

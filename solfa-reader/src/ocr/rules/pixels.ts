@@ -302,3 +302,51 @@ export function estimateSkew(b: Bitmap, maxDeg = 15): { angle: number; confidenc
   const confidence = bestScore > 0 ? Math.max(0, Math.min(1, (bestScore - med) / bestScore)) : 0;
   return { angle: Math.round(best * 100) / 100, confidence };
 }
+
+/** Box blur with radius r (separable running sums): suppresses sensor noise before thresholding. */
+export function boxBlur(img: GrayImage, r: number): GrayImage {
+  if (r < 1) return img;
+  const { width: w, height: h, data } = img;
+  const tmp = new Float64Array(w * h);
+  const out = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    const o = y * w;
+    let s = 0;
+    for (let x = -r; x <= r; x++) s += data[o + Math.min(w - 1, Math.max(0, x))];
+    for (let x = 0; x < w; x++) {
+      tmp[o + x] = s / (2 * r + 1);
+      s += data[o + Math.min(w - 1, x + r + 1)] - data[o + Math.max(0, x - r)];
+    }
+  }
+  for (let x = 0; x < w; x++) {
+    let s = 0;
+    for (let y = -r; y <= r; y++) s += tmp[Math.min(h - 1, Math.max(0, y)) * w + x];
+    for (let y = 0; y < h; y++) {
+      out[y * w + x] = Math.round(s / (2 * r + 1));
+      s += tmp[Math.min(h - 1, y + r + 1) * w + x] - tmp[Math.max(0, y - r) * w + x];
+    }
+  }
+  return { width: w, height: h, data: out };
+}
+
+/**
+ * Estimate the standard deviation of pixel noise from horizontal neighbour differences
+ * (median absolute difference is insensitive to the few large differences at letter edges).
+ */
+export function estimateNoise(img: GrayImage): number {
+  const { width: w, height: h, data } = img;
+  const hist = new Uint32Array(256);
+  let n = 0;
+  const step = Math.max(1, Math.floor((w * h) / 400000));
+  for (let i = 0; i + 1 < w * h; i += step) {
+    if ((i + 1) % w === 0) continue;
+    hist[Math.abs(data[i] - data[i + 1])]++;
+    n++;
+  }
+  let acc = 0;
+  for (let d = 0; d < 256; d++) {
+    acc += hist[d];
+    if (acc >= n / 2) return d / 0.6745 / Math.SQRT2;
+  }
+  return 0;
+}

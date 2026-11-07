@@ -2,7 +2,7 @@
 // live in ./rules/pixels.ts so they are unit-tested in node.
 import type { Rect } from './types';
 import type { Bitmap, GrayImage } from './rules/geometry';
-import { binarizeSauvola, estimateSkew, flattenIllumination, majorityFilter, toGray } from './rules/pixels';
+import { binarizeSauvola, boxBlur, estimateNoise, estimateSkew, flattenIllumination, majorityFilter, toGray } from './rules/pixels';
 
 /** Create a canvas (DOM). */
 export function createCanvas(w: number, h: number): HTMLCanvasElement {
@@ -147,7 +147,11 @@ export interface PreprocessOptions {
 
 /** Grey → flattened lighting → adaptive threshold (→ speckle cleaning for handwriting). */
 export function preprocessGray(gray: GrayImage, opts: PreprocessOptions = {}): Bitmap {
-  const flat = flattenIllumination(gray, opts.charH ? Math.max(16, Math.round(opts.charH * 2)) : 32);
+  // Noisy photos (dim light, cheap sensors) need smoothing or Sauvola turns grain into specks.
+  const noise = estimateNoise(gray);
+  const blurR = noise > 14 ? 2 : noise > 4 || opts.handwriting ? 1 : 0;
+  const smooth = boxBlur(gray, blurR);
+  const flat = flattenIllumination(smooth, opts.charH ? Math.max(16, Math.round(opts.charH * 2)) : 32);
   const radius = opts.charH ? Math.max(8, Math.round(opts.charH * (opts.handwriting ? 1.6 : 1.2))) : undefined;
   let b = binarizeSauvola(flat, { radius, k: opts.handwriting ? 0.25 : 0.2 });
   if (opts.handwriting) b = majorityFilter(b);

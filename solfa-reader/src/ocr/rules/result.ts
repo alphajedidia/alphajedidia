@@ -7,7 +7,7 @@ import { assignVoices, classifyRowText, groupSystems } from './layout';
 import { normalizeMusicLine } from './normalize';
 import type { PageAnalysis, PageOptions } from './page';
 import type { ClusterReading } from './strip';
-import { buildRowTokens, tokensFromText, tokenX, type Token } from './tokens';
+import { buildRowTokens, completeLabels, tokensFromText, tokenX, type Token } from './tokens';
 import type { VoiceId } from '../../core';
 
 export interface EngineReadings {
@@ -30,6 +30,7 @@ interface MusicRowOut {
   box: Box;
   tokens: Token[];
   label: VoiceId | null;
+  labelBox?: Box;
 }
 
 /** Build the document from the page analysis and the engine's readings. */
@@ -41,7 +42,7 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
     const box: Box = { x0: row.band.x0, y0: row.band.y0, x1: row.band.x1, y1: row.band.y1 };
     if (row.kind === 'music') {
       const r = buildRowTokens(row.items, rd.notes.get(row.index) ?? [], row.metrics);
-      music.push({ y: row.metrics.baseline - row.metrics.ascHeight, box, tokens: r.tokens, label: r.label });
+      music.push({ y: row.metrics.baseline - row.metrics.ascHeight, box, tokens: r.tokens, label: r.label, labelBox: r.labelBox });
       continue;
     }
     const t = rd.texts.get(row.index);
@@ -93,6 +94,7 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
       if (gi > 0 && info.key) keyLines.push({ text: `key: ${info.key}`, kind: 'header', voice: null, box: t.box, conf: t.conf, spans: [] });
     }
     if (keyLines.length) blocks.push(keyLines);
+    completeLabels(rows, page.xHeight);
     const aligned = alignSystem(
       rows.map((r) => r.tokens),
       page.xHeight,

@@ -1,0 +1,22 @@
+{
+  "id": "./",
+  "name": "Solfa Reader",
+  "short_name": "Solfa",
+  "description": "Alaivo sary ny solfa, henoy ny feo tsirairay: Soprano, Alto, Ténor, Basse. Take a photo of a sol-fa score and hear each choir voice.",
+  "lang": "mg",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f3ea",
+  "theme_color": "#1f3a5f",
+  "categories": ["music", "education"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

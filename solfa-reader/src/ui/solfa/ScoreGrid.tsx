@@ -77,19 +77,20 @@ export const ScoreGrid = memo(function ScoreGrid({
                     <span className="sr-score__label" aria-hidden="true" />
                     {sys.barAt.map((_, col) => {
                       const mark = sys.bars.find((b) => b.col === col);
-                      if (!mark) return <span key={col} className="sr-score__barno" />;
+                      const loopClass = inLoop(sys.startBeat + col) && 'is-loop';
+                      if (!mark) return <span key={col} className={cx('sr-score__barno', loopClass)} />;
                       return clickable ? (
                         <button
                           key={col}
                           type="button"
-                          className="sr-score__barno"
+                          className={cx('sr-score__barno', loopClass)}
                           data-beat={mark.beat}
                           aria-label={barTexts[mark.bar]}
                         >
                           {mark.bar}
                         </button>
                       ) : (
-                        <span key={col} className="sr-score__barno" aria-hidden="true">
+                        <span key={col} className={cx('sr-score__barno', loopClass)} aria-hidden="true">
                           {mark.bar}
                         </span>
                       );
@@ -115,12 +116,7 @@ export const ScoreGrid = memo(function ScoreGrid({
                       return (
                         <span
                           key={cell.beat}
-                          className={cx(
-                            'sr-score__cell',
-                            loop && 'is-loop',
-                            loop && cell.beat === loopStart && 'is-loop-start',
-                            loop && cell.beat === loopEnd - 1 && 'is-loop-end',
-                          )}
+                          className={cx('sr-score__cell', loop && 'is-loop')}
                           data-beat={cell.beat}
                           data-voice={row.voice}
                         >

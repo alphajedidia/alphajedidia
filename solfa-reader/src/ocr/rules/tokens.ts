@@ -25,6 +25,8 @@ export interface VoiceRowTokens {
   tokens: Token[];
   /** Voice label printed at the start of the row, if any. */
   label: VoiceId | null;
+  /** Where the label was printed. */
+  labelBox?: Box;
 }
 
 const MARK_TEXT: Partial<Record<RowItem['kind'], string>> = { dot: '.', comma: ',', apostrophe: "'", dash: '-' };
@@ -40,6 +42,7 @@ export function buildRowTokens(
 ): VoiceRowTokens {
   const tokens: Token[] = [];
   let label: VoiceId | null = null;
+  let labelBox: Box | undefined;
   let noteIndex = 0;
   let seenSep = false;
   let labelEnd = -Infinity;
@@ -73,6 +76,7 @@ export function buildRowTokens(
       const lab = readLabel(raw);
       if (!seenSep && label === null && tokens.every((t) => t.kind !== 'note') && lab && /[A-Z]/.test(raw) && f.h >= 1.2) {
         label = lab;
+        labelBox = it.box;
         labelEnd = it.box.x1;
         continue;
       }
@@ -80,7 +84,7 @@ export function buildRowTokens(
         tall: f.tall,
         width: f.w,
         comps: it.comps.length,
-        lahShape: it.comps.length === 1 && looksLikeLah(it.box, m),
+        lahShape: it.comps.length === 1 && looksLikeLah({ ...it.box, area: it.comps[0].area }, m),
       };
       const n = normalizeNote(raw, r ? r.conf : 0, geo);
       // `f` and `t` differ mostly by height: `t` is clearly shorter than the ascender letters.
@@ -100,7 +104,7 @@ export function buildRowTokens(
     const text = MARK_TEXT[it.kind];
     if (text) tokens.push({ kind: 'mark', text, box: it.box, conf: it.conf, reason: it.reason });
   }
-  return { tokens: cleanMarks(tokens, m), label };
+  return { tokens: cleanMarks(tokens, m), label, labelBox };
 }
 
 /** Drop marks that cannot be where they are (an apostrophe with no note before it). */
@@ -161,3 +165,26 @@ export function tokensFromText(text: string, box: Box): Token[] {
 export const tokenX = (t: Token): number => cx(t.box);
 /** Height of a token box. */
 export const tokenH = (t: Token): number => bh(t.box);
+
+/**
+ * When some rows of a system start with a printed label, a row whose first cluster sits at the
+ * same x before its first separator also starts with a (misread) label: strip it so it is not
+ * taken for a pick-up note. Mutates the rows; returns how many labels were recovered.
+ */
+export function completeLabels(rows: VoiceRowTokens[], xh: number): number {
+  const xs = rows.filter((r) => r.labelBox).map((r) => (r.labelBox as Box).x0);
+  if (xs.length === 0) return 0;
+  const lx = median(xs);
+  let n = 0;
+  for (const r of rows) {
+    if (r.labelBox) continue;
+    const first = r.tokens[0];
+    if (!first || first.kind !== 'note' || Math.abs(first.box.x0 - lx) > 1.5 * xh) continue;
+    let k = 1;
+    while (k < r.tokens.length && r.tokens[k].kind !== 'note' && r.tokens[k].text !== '|' && r.tokens[k].text !== '||' && r.tokens[k].box.x0 - r.tokens[k - 1].box.x1 <= 0.7 * xh) k++;
+    r.tokens.splice(0, k);
+    r.labelBox = first.box;
+    n++;
+  }
+  return n;
+}

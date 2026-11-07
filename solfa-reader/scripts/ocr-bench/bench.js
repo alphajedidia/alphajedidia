@@ -1,6 +1,7 @@
 // Dev-only page driven by run.mjs: degrade a rendered page image, run the real OCR pipeline.
 import { recognizeSolfa, terminateOcr } from '/src/ocr/index.ts';
 import { debugOverlay } from '/scripts/ocr-bench/debug.js';
+import { parseSolfa, formatSolfa } from '/src/core/index.ts';
 
 const canvasOf = (w, h) => {
   const c = document.createElement('canvas');
@@ -89,7 +90,22 @@ window.__ocr = async (dataUrl, d = {}) => {
       if (!stages.length || stages[stages.length - 1] !== p.stage) stages.push(p.stage);
     },
   });
+  // The output must be valid .solfa (parser of src/core) and already tidy (formatSolfa no-op).
+  let parse;
+  try {
+    const p = parseSolfa(res.text);
+    const bad = p.diagnostics.filter((x) => x.severity !== 'info');
+    parse = {
+      errors: bad.filter((x) => x.severity === 'error').length,
+      warnings: bad.filter((x) => x.severity === 'warning').length,
+      codes: [...new Set(bad.map((x) => x.code))],
+      tidy: formatSolfa(res.text).trimEnd() === res.text.trimEnd(),
+    };
+  } catch (e) {
+    parse = { errors: -1, warnings: -1, codes: [String(e)], tidy: false };
+  }
   return {
+    parse,
     text: res.text,
     warnings: res.warnings,
     confidence: res.confidence,

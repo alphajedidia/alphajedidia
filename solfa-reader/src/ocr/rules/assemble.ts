@@ -1,6 +1,6 @@
 // Render aligned systems into canonical, column-aligned .solfa text with uncertainty spans
-// (A-08, pure part). Layout follows SOLFA_FORMAT §1/§9: `S: | m  :m  :f  | …`, every cell of a
-// system padded to the same width, one space after a bar line, separators in the same columns.
+// (A-08, pure part). Layout follows SOLFA_FORMAT §9 and core's formatSolfa: every beat column
+// padded to its widest cell, one space after a bar line, separators in the same text columns.
 import type { VoiceId } from '../../core';
 import type { Box } from './geometry';
 import type { AlignedSystem } from './align';
@@ -36,7 +36,9 @@ function spanFor(t: Token, col: number): SpanOut | null {
 /** Render the voice lines of one aligned system. */
 export function renderSystem(sys: AlignedSystem, voices: readonly VoiceId[]): Omit<LineOut, 'box'>[] {
   const cols = Math.max(...sys.voices.map((c) => c.length));
-  const width = Math.max(1, ...sys.voices.flatMap((cells) => cells.map((c) => cellText(c).length)));
+  // Per-column widths, exactly like core's formatSolfa, so "Tidy" leaves OCR output unchanged.
+  const textW: number[] = [];
+  for (let j = 0; j < cols; j++) textW[j] = Math.max(0, ...sys.voices.map((cells) => (cells[j] ? cellText(cells[j]).length : 0)));
   const hasPick = sys.voices.some((cells) => cells[0] && cells[0].items.length > 0);
   const sepW: number[] = [];
   for (let j = 1; j < cols; j++) {
@@ -53,7 +55,7 @@ export function renderSystem(sys: AlignedSystem, voices: readonly VoiceId[]): Om
     let text = `${voice ?? 'S'}: `;
     const spans: SpanOut[] = [];
     const confs: number[] = [];
-    const addCell = (cell: Cell | undefined) => {
+    const addCell = (cell: Cell | undefined, width: number) => {
       let col = text.length;
       for (const t of cell?.items ?? []) {
         confs.push(t.conf);
@@ -63,7 +65,7 @@ export function renderSystem(sys: AlignedSystem, voices: readonly VoiceId[]): Om
       }
       text += cellText(cell ?? { sep: null, items: [] }).padEnd(width) + ' ';
     };
-    if (hasPick) addCell(cells[0]);
+    if (hasPick) addCell(cells[0], textW[0]);
     for (let j = 1; j < cols; j++) {
       const cell = cells[j];
       const s = cell?.sep;
@@ -74,7 +76,7 @@ export function renderSystem(sys: AlignedSystem, voices: readonly VoiceId[]): Om
       }
       const sepText = s ? s.text + (isBar(s.text) ? ' ' : '') : '';
       text += sepText.padEnd(sepW[j]);
-      addCell(cell);
+      addCell(cell, textW[j]);
     }
     text = text.trimEnd();
     const conf = confs.length ? confs.reduce((a, b) => a + b, 0) / confs.length : 0;

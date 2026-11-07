@@ -162,3 +162,75 @@ which also reloads the page once. The page posts the URLs it already loaded (`CA
 the first visit is fully offline-capable. Nothing is registered in dev.
 **Consequences.** Verified in Chromium from a sub-path (`/repo/app/`): offline reload, update
 offer → apply → reload, old caches removed, OCR file revalidated with a single 304.
+
+### ADR-019 — Parser: how the open points of SOLFA_FORMAT are read
+*2026-11-07 · accepted · solfa-backend (B-02)*
+**Context.** The format spec leaves some cases open, and both `parseSolfa` and `formatSolfa` must
+agree on them (they share `core/lines.ts` and `core/scan.ts`).
+**Decision.**
+* **Lines.** Headers, comments and `W:` lines never end a system; only blank lines do. A `key:`
+  header takes effect for the next system that *starts* after it. `W:` lines go to the last
+  system (or to the first one when written before any music). If a **labelled voice appears
+  twice** in a system, a new system starts (forgotten blank line).
+* **Header vs. music.** Lower-case `do` is also a note (lowered doh), so `do` starts a key header
+  only as `do:`/`do =`/`do dia`/`do is` + a valid key; `do :r :m` stays music. Unknown
+  `name: value` pairs go to `Song.meta` only when *name* has ≥ 3 letters and the value has no `|`.
+* **Beats.** Positions are computed in twelfths (exact ¼, ⅓, ½, ¾). `,` after the half (after a
+  `.`) is the ¾ point, before it the ¼ point; `.,` must be adjacent (`d. ,r` = d ½, rest ¼, r ¼).
+  Two items with no mark between them (`d'r`, `d r`) → `bad-division`, equal split. A bad note
+  keeps its time as a rest. A run of hold signs (`--`) is one hold. A hold after a **rest** has
+  nothing to hold (`hold-without-note`, becomes a rest). `ti` follows the general rule (raised);
+  only `te` is the exception.
+* **Comma info.** `comma-as-division` is emitted only for the ambiguous `d,r` (comma right after
+  the note letters), not for the explicit `d,,r`.
+* **Diagnostics.** `bar-count-mismatch` blames the lines whose bar count differs from the most
+  common one. Shorter voices are padded with `weak` rest beats. `tempo:` takes the first number
+  (`100 bpm` works). `time:` also accepts `C`, `¢` and a bare number; an unreadable `time:` is
+  ignored (there is no diagnostic code for it yet). Without `time:`, `Song.time` is filled with
+  the inferred beats (unit 4). A last-resort catch returns code `internal-error` instead of
+  throwing (fuzzed with ~80 000 random texts, never triggered).
+* **Keys.** Display names use `#` for sharps and `♭` for flats (as in the model's examples);
+  `A minor` is a `bad-key` (the key is always the doh).
+**Consequences.** Behaviour is pinned by tests in `core/*.test.ts`. Two items may deserve a spec
+line: a `bad-time` code, and the "repeated label = new system" rule.
+
+### ADR-020 — Canonical formatting style
+*2026-11-07 · accepted · solfa-backend (B-03)*
+**Context.** §9 asks for aligned columns and "single spaces around separators"; the §1 example
+writes `| m  :m  :f` (a space after a bar line, none after `:`) with one width for all columns.
+**Decision.** `formatSolfa` follows the printed sol-fa look of §1: a bar line (`|`, `||`) is
+followed by one space; `:`, `!`, `¦` are attached to the next beat; every beat column is padded
+to the widest text **of that column** across the voices, then one space before the next
+separator. Labels are padded to the same width; lines of a system without a label get spaces.
+Beat text is trimmed (meaning-preserving: leading/trailing spaces never change the comma rule).
+**Consequences.** Separators of a system line up; output is compact on phones; idempotent and
+meaning-preserving (property-tested on random input). `formatSolfa(§1 example)` is not byte-equal
+to §1 (narrower columns) but parses to the same song. Samples are stored in canonical form.
+
+### ADR-021 — Bars across systems: `VoiceLine.endsWithBar`
+*2026-11-07 · accepted · solfa-backend (B-02/B-04)*
+**Context.** A system whose first beat has no `|` either continues the previous bar or starts a
+new one, depending on whether the previous line ended with `|`. That information was lost.
+**Decision.** Add the optional field `VoiceLine.endsWithBar` (allowed by RULES R1.2). Bars are
+read from the top voice present in each system; a beat starts a bar when it follows `|`/`||`, or
+when it is the first beat of a system after a line that ended with a bar line. Leading beats
+before the first bar line are bar 0 (pick-up). A song with no bar line at all gets regular bars
+of `beatsPerBar` beats so loops and highlighting still work.
+**Consequences.** `Sequence.bars` and `NoteEvent.bar` are right for scores that break systems
+mid-bar or omit the leading `|`. No existing field changed.
+
+### ADR-022 — Storage layout and share-link safety
+*2026-11-07 · accepted · solfa-backend (B-09)*
+**Decision.** One idb-keyval store (`solfa-reader`/`kv`) with keys `song:<id>` and `settings`;
+the store is opened lazily and the backend is injectable (`setStorageBackend`, in-memory backend
+for tests). Browsers without IndexedDB get the in-memory backend automatically
+(`getStorageBackend().persistent === false`) instead of failing. `updatedAt` always moves
+forward; stored records and settings are validated on read (damaged entries are skipped, unknown
+or invalid settings fall back to defaults). Ids: `crypto.randomUUID`, else a v4 UUID from
+`getRandomValues` (randomUUID is missing on plain-http origins). Share payload = version letter
++ base64url: `z` = deflate-raw, `p` = plain UTF-8; the encoder picks the shorter. The decoder
+throws `ShareDecodeError` with a `code` (`empty`, `bad-prefix`, `bad-encoding`, `bad-data`,
+`too-large`, `unsupported`), stops inflating past 512 KB (zip-bomb links) and rejects invalid
+UTF-8.
+**Consequences.** The share screen can map each code to a translated message; a 4-voice song
+fits well under 2000 characters (tested on the samples).
