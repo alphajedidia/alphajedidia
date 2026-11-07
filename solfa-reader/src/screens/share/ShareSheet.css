@@ -1,0 +1,24 @@
+.sr-share {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-4);
+}
+
+.sr-share__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-2);
+}
+
+.sr-share__wait {
+  display: flex;
+  align-items: center;
+  gap: var(--sr-space-2);
+  min-height: var(--sr-touch-md);
+  color: var(--sr-text-muted);
+}
+
+.sr-share__error {
+  color: var(--sr-danger);
+  font-weight: var(--sr-fw-semibold);
+}

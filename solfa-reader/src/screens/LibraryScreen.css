@@ -1,0 +1,15 @@
+/* Library (home) screen. */
+
+.sr-library .sr-section-title {
+  padding-inline: var(--sr-space-1);
+}
+
+@media (min-width: 768px) {
+  .sr-library__bottom {
+    align-items: center;
+  }
+
+  .sr-library__bottom > .sr-btn {
+    flex: 0 1 18rem;
+  }
+}

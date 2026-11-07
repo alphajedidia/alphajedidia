@@ -100,7 +100,11 @@ export function routeHref(route: Route): string {
   return `#${routePath(route)}`;
 }
 
-/** Stable key of the screen a route shows (scan steps share one screen family). */
+/**
+ * Identity of the screen a route shows: a change remounts the screen. `#/new` and `#/edit/<id>`
+ * share one key so a new song that gets its id after the first save keeps its editor state.
+ */
 export function screenKey(route: Route): string {
+  if (route.name === 'new' || route.name === 'edit') return 'editor';
   return route.name === 'scan' ? `scan-${route.step}` : routePath(route);
 }

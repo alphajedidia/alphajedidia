@@ -1,0 +1,119 @@
+/* App shell styles (solfa-interface). Tokens only (R3.8). */
+
+.sr-app__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: var(--sr-text-muted);
+  /* Short loads show nothing (DESIGN §6: < 300 ms = nothing). */
+  animation: sr-app-fade-in var(--sr-dur-base) var(--sr-ease) 300ms both;
+}
+
+@keyframes sr-app-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Grey placeholder rows while IndexedDB answers (library, player). */
+.sr-skeleton {
+  display: block;
+  border-radius: var(--sr-radius-md);
+  background: var(--sr-surface-2);
+  animation: sr-app-fade-in var(--sr-dur-base) var(--sr-ease) 300ms both;
+}
+
+.sr-skeleton--row {
+  height: 64px;
+}
+
+/* A screen whose body scrolls between a sticky top bar and a sticky bottom area. */
+.sr-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.sr-page__body {
+  flex: 1 1 auto;
+  width: 100%;
+  padding-block: var(--sr-space-4) var(--sr-space-5);
+}
+
+.sr-page__bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--sr-z-sticky);
+  padding: var(--sr-space-3) calc(var(--sr-gutter) + var(--sr-safe-right))
+    calc(var(--sr-space-3) + var(--sr-safe-bottom)) calc(var(--sr-gutter) + var(--sr-safe-left));
+  background: var(--sr-surface);
+  border-top: 1px solid var(--sr-border);
+  box-shadow: var(--sr-shadow-up);
+}
+
+.sr-page__bottom-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-2);
+  max-width: var(--sr-content-max);
+  margin-inline: auto;
+}
+
+.sr-page__bottom-row {
+  display: flex;
+  gap: var(--sr-space-2);
+}
+
+.sr-page__bottom-row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Hidden file inputs opened by buttons. */
+.sr-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Bulleted tips (scan, help). */
+.sr-tips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-2);
+  list-style: none;
+}
+
+.sr-tips li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sr-space-2);
+}
+
+.sr-tips li > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--sr-brand-text);
+}
+
+@media (min-width: 768px) {
+  .sr-page__bottom-inner {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .sr-page__bottom-inner > * {
+    flex: 0 1 auto;
+  }
+
+  .sr-page__bottom-row {
+    flex: 0 1 auto;
+  }
+}

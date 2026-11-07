@@ -1,0 +1,186 @@
+/* Editor: the page never scrolls; the text area scrolls between the top bar and the keypad. */
+
+.sr-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.sr-editor__main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--sr-space-2);
+  width: 100%;
+  max-width: calc(var(--sr-content-max) + 2 * var(--sr-gutter));
+  min-height: 0;
+  margin-inline: auto;
+  padding: var(--sr-space-2) calc(var(--sr-space-2) + var(--sr-safe-right)) var(--sr-space-2)
+    calc(var(--sr-space-2) + var(--sr-safe-left));
+}
+
+.sr-editor__field {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 7rem;
+  border: 1px solid var(--sr-border-strong);
+  border-radius: var(--sr-radius-md);
+  background: var(--sr-surface);
+  overflow: hidden;
+}
+
+.sr-editor__field:focus-within {
+  border-color: var(--sr-focus);
+  box-shadow: 0 0 0 1px var(--sr-focus);
+}
+
+/* The mirror and the textarea must lay text out identically. */
+.sr-editor__mirror,
+.sr-editor__textarea {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: var(--sr-space-2) var(--sr-space-3);
+  border: 0;
+  font-family: var(--sr-font-mono);
+  font-size: var(--sr-fs-solfa);
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  white-space: pre;
+  overflow-wrap: normal;
+  tab-size: 4;
+}
+
+.sr-editor__mirror {
+  overflow: hidden;
+  color: transparent;
+  pointer-events: none;
+}
+
+.sr-editor__textarea {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  overflow: auto;
+  background: transparent;
+  color: var(--sr-text);
+  caret-color: var(--sr-brand-text);
+  outline: none;
+}
+
+.sr-editor__textarea:focus-visible {
+  outline: none;
+}
+
+.sr-editor__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sr-space-1);
+}
+
+.sr-editor__keypad {
+  flex: none;
+}
+
+/* ---- Diagnostics list ---- */
+
+.sr-diags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-1);
+}
+
+.sr-diags__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  list-style: none;
+}
+
+.sr-diags__list.is-expanded {
+  max-height: 32vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sr-diags__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sr-space-2);
+  width: 100%;
+  min-height: var(--sr-touch-min);
+  padding: var(--sr-space-2) var(--sr-space-3);
+  border: 0;
+  border-radius: var(--sr-radius-sm);
+  background: var(--sr-surface-2);
+  text-align: start;
+}
+
+.sr-diags__item--error {
+  background: var(--sr-danger-soft);
+}
+
+.sr-diags__item--warning {
+  background: var(--sr-warning-soft);
+}
+
+.sr-diags__item--info {
+  background: var(--sr-info-soft);
+}
+
+.sr-diags__item--error .sr-diags__icon {
+  color: var(--sr-danger);
+}
+
+.sr-diags__item--warning .sr-diags__icon {
+  color: var(--sr-warning);
+}
+
+.sr-diags__item--info .sr-diags__icon {
+  color: var(--sr-info);
+}
+
+.sr-diags__icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.sr-diags__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sr-diags__msg {
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-semibold);
+  color: var(--sr-text);
+}
+
+.sr-diags__where {
+  font-size: var(--sr-fs-xs);
+  color: var(--sr-text-muted);
+}
+
+.sr-diags__more {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--sr-space-1);
+  min-height: var(--sr-touch-min);
+  padding: 0 var(--sr-space-2);
+  border: 0;
+  background: transparent;
+  color: var(--sr-brand-text);
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-semibold);
+}
+
+@media (hover: hover) {
+  .sr-diags__item:hover {
+    box-shadow: inset 0 0 0 2px var(--sr-border-strong);
+  }
+}
