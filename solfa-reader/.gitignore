@@ -7,3 +7,4 @@ tests/e2e/out/
 scripts/ocr-bench/out/
 *.log
 .DS_Store
+scripts/ocr-bench/real/
