@@ -109,6 +109,11 @@ export function classifyShape(c: Box & { area: number }, m: RowMetrics, opts: Sh
   if (w >= 0.28 && h <= 0.38 * L && w / Math.max(h, 0.01) >= 1.7 && mid >= -0.35 && mid <= 0.95) {
     return { kind: 'dash', conf: 0.85 };
   }
+  // A short, wider-than-high mark floating at mid x-height is a hold dash too (bold or
+  // hand-drawn hyphens are stubby); a dot sits on the baseline, a colon's top dot is round.
+  if (w >= 0.2 && w <= 1.2 && h <= 0.4 * L && w / Math.max(h, 0.01) >= 1.3 && bottom >= 0.18 && top <= 0.85) {
+    return { kind: 'dash', conf: 0.6 };
+  }
   // Dot-sized blob.
   if (w <= 0.5 * L && h <= 0.5 * L && h / Math.max(w, 0.01) <= 2.1 && h / Math.max(w, 0.01) >= 0.45) {
     if (Math.abs(bottom) <= 0.28 * L && top <= 0.6) return { kind: 'dot-low', conf: 0.9 };

@@ -102,7 +102,9 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
   // (Only dot-shaped upper parts: an apostrophe above a following `.` is `d'.r`, not a colon.)
   const dotLine: number[] = [];
   for (const dot of [...of('dot-low'), ...of('comma')]) {
-    const hi = nearAbove(dot, of('dot-high'), 0.45 * xh * L, true);
+    // Stubby "dashes" (conf < 0.7) may be a squashed colon top: accept them above a dot.
+    const tops = [...of('dot-high'), ...of('dash').filter((t) => t.s.conf < 0.7)];
+    const hi = nearAbove(dot, tops, 0.45 * xh * L, true);
     if (hi) {
       const semicolon = dot.s.kind === 'comma';
       if (!semicolon) dotLine.push(dot.c.y1);
