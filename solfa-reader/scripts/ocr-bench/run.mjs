@@ -53,6 +53,14 @@ function cases() {
         out.push({ set: 'clean', f, style: { font: 'Liberation Serif', size: 26, bars: 'text' }, deg: {}, degName: 'clean-large' });
       }
     }
+    if (!args.quick && (!args.deg || String(args.deg).startsWith('hand'))) {
+      // Hand-written look: irregular glyphs, with and without the handwriting option.
+      for (const font of ['DejaVu Sans', 'FreeSerif']) {
+        const style = { font, size: 22, bars: 'text', jitter: true, seed: font.length };
+        out.push({ set: 'hand', f, style, deg: { rotate: 1, blur: 0.6, noise: 10, jpeg: 0.7 }, degName: 'hand-default' });
+        out.push({ set: 'hand', f, style, deg: { rotate: 1, blur: 0.6, noise: 10, jpeg: 0.7, handwriting: true }, degName: 'hand-option' });
+      }
+    }
     if (args.quick && !args.deg) continue;
     for (const [name, deg] of Object.entries(DEGRADATIONS)) {
       if (args.deg && args.deg !== name) continue;
@@ -177,7 +185,7 @@ async function main() {
       const a = agg(list);
       lines.push(`| ${set} | ${deg} | ${a.n} | ${a.cells} | ${pct(a.acc)} | ${a.perr} | ${a.ms} ms |`);
     }
-    for (const set of ['clean', 'degraded']) {
+    for (const set of ['clean', 'degraded', 'hand']) {
       const list = rows.filter((r) => r.set === set);
       if (list.length) {
         const a = agg(list);

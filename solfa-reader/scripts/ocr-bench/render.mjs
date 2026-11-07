@@ -3,7 +3,28 @@
 // or under the voices, optional ruled (graphic) bar lines spanning the voices.
 import { parseDoc } from './compare.mjs';
 
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const escText = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// "Hand-written" look: every glyph slightly rotated, shifted and resized (deterministic).
+let jitter = null;
+function seeded(seed) {
+  let x = seed >>> 0;
+  return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296);
+}
+const esc = (s) => {
+  if (!jitter) return escText(s);
+  return [...s]
+    .map((ch) => {
+      if (ch === ' ') return ' ';
+      const r = jitter.rnd;
+      const rot = (r() - 0.5) * 2 * jitter.rot;
+      const dy = (r() - 0.5) * 2 * jitter.dy;
+      const sc = 1 + (r() - 0.5) * 2 * jitter.scale;
+      const dx = (r() - 0.5) * 2 * jitter.dx;
+      return `<span style="display:inline-block;transform:translate(${dx.toFixed(3)}em,${dy.toFixed(3)}em) rotate(${rot.toFixed(1)}deg) scale(${sc.toFixed(2)})">${escText(ch)}</span>`;
+    })
+    .join('');
+};
 
 /** Read the voice/words lines of each system in printed order (words keep their position). */
 function systemsInOrder(text) {
@@ -36,6 +57,7 @@ function systemsInOrder(text) {
  * style: { font, size (px), bars: 'text' | 'rule', labels: boolean, lineHeight, width (px) }
  */
 export function renderHtml(fixture, style) {
+  jitter = style.jitter ? { rnd: seeded(style.seed ?? 7), rot: 7, dy: 0.08, dx: 0.05, scale: 0.12 } : null;
   const { headers, systems } = systemsInOrder(fixture.text);
   const font = style.font ?? 'DejaVu Serif';
   const size = style.size ?? 20;
@@ -73,7 +95,7 @@ export function renderHtml(fixture, style) {
   }
   return `<!doctype html><html><head><meta charset="utf-8"><style>
   html,body{margin:0;background:#fff;color:#111}
-  body{width:${style.width ?? 980}px;padding:36px 44px;box-sizing:border-box;font-family:'${font}';font-size:${size}px}
+  body{width:${style.width ?? 980}px;padding:36px 44px;box-sizing:border-box;font-family:'${font}';font-size:${size}px;${style.jitter ? 'font-weight:bold;letter-spacing:.04em;' : ''}}
   h1{font-size:1.45em;text-align:center;margin:0 0 .5em;font-weight:bold}
   .key{margin:0 0 1.1em;font-size:1em}
   .sys{display:grid;margin:0 0 ${(style.systemGap ?? 1.6).toFixed(2)}em;line-height:${lh}}
