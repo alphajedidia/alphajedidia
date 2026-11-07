@@ -63,7 +63,9 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
         // (octave mark) sits higher, e.g. `d'.r` must not become `d:r`.
         const top = (m.baseline - h.c.y0) / xh;
         const ratio = h.c.area / Math.max(1, low.c.area);
-        if (top > 1.15 * L || ratio < 0.35 || ratio > 2.8) continue;
+        // Tiny dots (a few pixels) vary a lot in area after thresholding.
+        const tiny = Math.max(h.c.area, low.c.area) <= 0.04 * xh * xh;
+        if (top > 1.15 * L || ratio < (tiny ? 0.2 : 0.35) || ratio > (tiny ? 5 : 2.8)) continue;
       }
       const dx = Math.abs(cx(h.c) - cx(low.c));
       if (dx > maxDx) continue;
@@ -159,6 +161,11 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
   const flush = () => {
     if (cur.length === 0) return;
         const lone = cur.length === 1 && looksLikeLah(cur[0].c, m);
+    if (cur.length === 1 && cur[0].members.length === 1 && looksLikeMergedColon(cur[0].c, m)) {
+      push('colon', cur, 0.5, { reason: 'merged-colon' });
+      cur = [];
+      return;
+    }
     push('note', cur, Math.min(...cur.map((t) => t.s.conf)), lone ? { alt: 'bar' } : {});
     cur = [];
   };
@@ -217,4 +224,17 @@ export function hasGluedApostrophe(lab: Labelled, c: Component, m: RowMetrics): 
     else break;
   }
   return run >= Math.max(2, 0.12 * xh) && run <= 0.6 * xh && run < 0.5 * (c.x1 - c.x0);
+}
+
+/**
+ * A colon whose two dots ran together (blur, ink spread): a thin blob standing on the baseline
+ * and reaching about the x-line. Alone it cannot be a letter — `i` only occurs after another
+ * letter (`fi`, `si`), `l` is taller.
+ */
+export function looksLikeMergedColon(c: Box & { area: number }, m: RowMetrics): boolean {
+  const xh = Math.max(1, m.xHeight);
+  const h = bh(c) / xh;
+  const w = bw(c) / xh;
+  const bottom = (m.baseline - c.y1) / xh;
+  return h >= 0.6 && h <= 1.12 && w <= 0.38 && Math.abs(bottom) <= 0.2;
 }

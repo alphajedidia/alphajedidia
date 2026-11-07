@@ -2,9 +2,9 @@
 // letter strips and text rows → rules → canonical text. DOM glue only; decisions live in rules/.
 import type { OcrLineInfo, OcrProgress, OcrStage, OcrUncertainSpan, RecognitionResult, RecognizeOptions } from './types';
 import { getWorker, recognizeCanvas } from './engine';
-import { bitmapToCanvas, canvasToGray, detectSkew, preprocessGray, rotateCanvasBy, scaleCanvas } from './image';
+import { bitmapToCanvas, canvasToGray, detectSkew, grayToCanvas, preprocessGray, preprocessGrayFull, rotateCanvasBy, scaleCanvas } from './image';
 import { estimateCharHeight, labelComponents } from './rules/components';
-import { workBoxToSource, type Bitmap, type Box, type WorkTransform } from './rules/geometry';
+import { workBoxToSource, type Bitmap, type Box, type GrayImage, type WorkTransform } from './rules/geometry';
 import { analyzePage } from './rules/page';
 import { buildResult, type EngineReadings } from './rules/result';
 import { assignReadings, composeStrip } from './rules/strip';
@@ -62,6 +62,8 @@ export interface WorkImage {
   work: HTMLCanvasElement;
   /** Its binarized pixels. */
   bin: Bitmap;
+  /** Cleaned grey pixels (same geometry as bin). */
+  flat: GrayImage;
   transform: WorkTransform;
   warnings: string[];
 }
@@ -103,11 +105,12 @@ export async function prepareWorkImage(
   check();
   await tick();
   progress(0.6);
-  const bin = preprocessGray(canvasToGray(work), { handwriting: hw, charH: charH || undefined });
+  const { bin, flat } = preprocessGrayFull(canvasToGray(work), { handwriting: hw, charH: charH || undefined });
   await tick();
   return {
     work,
     bin,
+    flat,
     transform: { scale, angleDeg: angle, scaledW, scaledH, workW: work.width, workH: work.height },
     warnings,
   };
@@ -130,7 +133,7 @@ export async function recognizeSolfaImpl(image: HTMLCanvasElement, opts: Recogni
 
   // 1–2. Working image: scale, deskew, binarize.
   report('preprocessing', 0);
-  const { bin, transform, warnings } = await prepareWorkImage(image, hw, (p) => report('preprocessing', p), check);
+  const { bin, flat, transform, warnings } = await prepareWorkImage(image, hw, (p) => report('preprocessing', p), check);
 
   // 3. Layout analysis (pure).
   const page = analyzePage(bin, { handwriting: hw });
@@ -152,9 +155,9 @@ export async function recognizeSolfaImpl(image: HTMLCanvasElement, opts: Recogni
   for (const row of page.rows.filter((r) => r.kind === 'music')) {
     report('recognizing', done / total);
     if (row.clusters.length > 0) {
-      const { bitmap, plan } = composeStrip(page.labelled, row.clusters, row.metrics);
+      const { gray, plan } = composeStrip(page.labelled, row.clusters, row.metrics, flat);
       const s = Math.min(4, Math.max(0.5, ENGINE_X_HEIGHT / Math.max(1, row.metrics.xHeight)));
-      const canvas = bitmapToCanvas(bitmap, s);
+      const canvas = grayToCanvas(gray!, s);
       const data = await recognizeCanvas(canvas, 'music', signal);
       readings.notes.set(row.index, assignReadings(plan, pageSymbols(data), s));
     }

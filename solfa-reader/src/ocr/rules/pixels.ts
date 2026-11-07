@@ -30,6 +30,29 @@ export function toGrayMax(rgba: Uint8ClampedArray | Uint8Array, width: number, h
 }
 
 /**
+ * RGBA → grey for photos: the darkest channel for neutral pixels (best ink/paper contrast,
+ * also on pink or yellowed paper), the brightest channel for strongly coloured pixels (blue
+ * pen, highlighter, coffee stains), blended smoothly by saturation and brightness.
+ */
+export function toGrayRobust(rgba: Uint8ClampedArray | Uint8Array, width: number, height: number): GrayImage {
+  const n = width * height;
+  const out = new Uint8Array(n);
+  for (let i = 0, j = 0; i < n; i++, j += 4) {
+    const r = rgba[j];
+    const g = rgba[j + 1];
+    const b = rgba[j + 2];
+    const mx = Math.max(r, g, b);
+    const mn = Math.min(r, g, b);
+    const sat = mx > 0 ? (mx - mn) / mx : 0;
+    // Only light coloured pixels are lightened: black ink under a highlighter stays dark.
+    const w = Math.min(1, Math.max(0, (sat - 0.28) / 0.2)) * Math.min(1, Math.max(0, (mx - 110) / 60));
+    const a = rgba[j + 3] / 255;
+    out[i] = Math.round((mn * (1 - w) + mx * w) * a + 255 * (1 - a));
+  }
+  return { width, height, data: out };
+}
+
+/**
  * Flatten uneven lighting (shadows, phone flash): estimate the paper brightness on a coarse
  * grid (a high percentile per cell), smooth it, and divide it out.
  */

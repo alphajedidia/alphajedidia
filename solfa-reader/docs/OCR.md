@@ -1,9 +1,12 @@
 # Recognition (OCR) — pipeline, parameters, benchmark
 
-Owner: **solfa-ai** · Code: `src/ocr/` · Benchmark: `scripts/ocr-bench/` · Decisions: ADR-028 … ADR-032
+Owner: **solfa-ai** · Code: `src/ocr/` · Benchmark: `scripts/ocr-bench/` · Decisions: ADR-028 … ADR-032, ADR-037
 
 The scan screen loads the module lazily (`await import('../ocr')`) and calls
-`recognizeSolfa(canvas, { onProgress, signal, handwriting })`. Everything runs in the browser:
+`recognizeSolfa(canvas, { onProgress, signal, handwriting })`. Before that it can straighten a
+photographed page with `warpQuad(canvas, [tl, tr, br, bl])` (corners in canvas pixels, e.g. from
+a 4-corner crop UI) and propose those corners with `detectPageQuad(canvas)` (returns `null` when
+the page outline is not clear — keep the whole image then). Everything runs in the browser:
 Tesseract.js (WASM, LSTM, English `best_int` model, self-hosted under `public/tesseract/`) plus
 our own geometric rules in pure TypeScript. The image never leaves the phone.
 
@@ -11,13 +14,16 @@ our own geometric rules in pure TypeScript. The image never leaves the phone.
 
 ```
 canvas ──► prepareWorkImage (recognize.ts + image.ts, canvas glue)
-            scale: longest side ≤ 2600 px; upscale ×≤4 when characters are < 18 px
+            scale: longest side ≤ 3400 px / 12 MP; upscale ×≤4 when characters are < 26 px
             deskew: projection profile of baseline pixels over ±15° (0.5° then 0.05° steps)
-            grey → noise estimate → box blur (r 0–2) → illumination flattening → Sauvola
-            (handwriting: + 3×3 majority filter)
+            robust grey (darkest channel; brightest for light coloured pixels: pen, highlighter,
+            stains, tinted paper) → noise estimate → box blur (r 0–2) → illumination
+            flattening → Sauvola  (handwriting: + 3×3 majority filter)
        ──► analyzePage (rules/page.ts, pure)
             connected components (8-conn., union-find)          rules/components.ts
-            ruled lines (graphic bar lines) and speckles removed  rules/components.ts
+            tables / ruled lines erased (long runs, thin "frames"); their vertical parts are
+            bar lines                                             rules/lines.ts
+            ruled bar lines and speckles split off                rules/components.ts
             rows from the vertical extent of letter-sized blobs  rules/layout.ts
             row metrics: baseline (area-weighted), x-height, ascender height  rules/symbols.ts
             shape of every blob relative to the row               rules/symbols.ts
@@ -25,9 +31,9 @@ canvas ──► prepareWorkImage (recognize.ts + image.ts, canvas glue)
             note clusters                                         rules/marks.ts
             row kind: music (separators + short clusters) or text
        ──► Tesseract (engine.ts, one lazy worker)
-            music rows: a "letter strip" — only the note clusters, cut out with their own
-            pixels, baseline-aligned, wide gaps, x-height scaled to 30 px — read with
-            PSM 7 and whitelist `drmfsltaeioSATB`               rules/strip.ts
+            music rows: a "letter strip" — only the note clusters, cut out of the cleaned grey
+            image (other blobs whited out), baseline-aligned, wide gaps, x-height 30 px — read
+            with PSM 7 and whitelist `drmfsltaeioSATB'`         rules/strip.ts
             text rows (title, key line, lyrics): the row crop, PSM 7, no whitelist
        ──► buildResult (rules/result.ts, pure)
             readings → note tokens: confusion map, `l` by shape, `f`/`t` by height vs `d`/`l`,
@@ -63,7 +69,8 @@ the baseline and x-height decides what they are (ADR-028).
 `low-confidence` (engine confidence < 0.6), `corrected-letter` (confusion map / height rule
 changed the reading), `unread-glyph` (engine returned nothing; letter guessed from its shape),
 `inserted-separator`, `dropped-separator`, `corrected-separator`, `bar-as-lah`, `lah-as-bar`,
-`dot-or-comma`, `semicolon-as-colon`, `comma-position`, `stray-mark`, `text-fallback`.
+`dot-or-comma`, `semicolon-as-colon`, `comma-position`, `stray-mark`, `text-fallback`,
+`lah-as-medium` (a short `I` read as `!`), `merged-colon`, `glued-octave`.
 Spans index the final text (line, column), so the review screen can highlight them directly; the
 text is already in `formatSolfa` form, so "Tidy" does not move them.
 
@@ -75,8 +82,10 @@ text is already in `formatSolfa` form, so "Tidy" does not move them.
 ## 2. Parameters (where to tune)
 | Parameter | Value | File |
 |---|---|---|
-| Max working side / pixel budget | 2600 px / 9 MP | `recognize.ts` |
-| Target character height / engine x-height | 26 px / 30 px | `recognize.ts` |
+| Photo decoding (`loadImageToCanvas` default) | ≤ 4000 px | `image.ts` |
+| Max working side / pixel budget | 3400 px / 12 MP | `recognize.ts` |
+| Target character height / engine x-height | 30 px (upscale below 26) / 30 px | `recognize.ts` |
+| Ruled lines | horizontal runs ≥ 5 char heights, vertical ≥ 2.6, line thickness ≤ 0.3 | `rules/lines.ts` |
 | Sauvola window radius, k | 1.2 × char height (1.6 handwriting), 0.2 (0.25) | `image.ts` |
 | Noise → blur radius | σ > 4 → 1, σ > 14 → 2 (handwriting ≥ 1) | `image.ts` |
 | Deskew range / correction threshold | ±15° / ≥ 0.25° | `rules/pixels.ts`, `recognize.ts` |
@@ -108,7 +117,18 @@ Fixtures (`scripts/ocr-bench/fixtures.mjs`): the SOLFA_FORMAT §1 example; `pick
 Fonts: DejaVu Serif, Liberation Serif, Liberation Sans, DejaVu Sans, FreeSerif (20 px at 1.6×,
 i.e. x-height ≈ 15–18 px), plus ruled bar lines and a large size.
 
-### Results (2026-11-07, desktop Chromium, single thread)
+### Results after the real-photo work (2026-11-07, X-02)
+
+| Set | Pages | Beat cells | Correct | Pages with parse errors | Mean time |
+|---|---|---|---|---|---|
+| clean (all variants) | 32 | 2080 | **99.8 %** | 0 | 753 ms |
+| degraded (all variants) | 56 | 3640 | **99.5 %** | 0 | 787 ms |
+| simulated hand, default / `handwriting: true` | 8 + 8 | 520 + 520 | 73.8 % / 85.6 % | 5 / 1 | 881 / 973 ms |
+
+The rules added for real photos did not cost anything on synthetic pages (every row ≥ 99.2 %).
+The detailed table below is the A-09 run, kept for history.
+
+### Results (2026-11-07, desktop Chromium, single thread) — A-09
 
 | Set | Variant | Pages | Beat cells | Correct | Pages with parse errors | Uncertain spans / page | Mean time |
 |---|---|---|---|---|---|---|---|
@@ -145,6 +165,54 @@ page-level `d`/`l` height, colon-top check, safer separator dropping → 99.6 % 
   HTTP cache). A mid-range phone is typically 5–10× slower → ≈ 3–6 s, inside the 20 s budget
   (FR-11). Not yet measured on a real phone.
 
+
+### Real photos (X-02)
+
+`node scripts/ocr-bench/run-real.mjs [--mode=rect|quad|auto|all] [--photo=<id>] [--verbose]
+[--debug] [--dump]`. Photos, their ground truth (`*.solfa`, first 3 systems = 192 beat cells
+each) and crop definitions (`crops.json`) live in `scripts/ocr-bench/real/`, which is
+**git-ignored** (the songs may be copyrighted: never commit them or transcriptions). Same path as
+the app: `loadImageToCanvas` → crop rectangle (`rect`), or 4 corners straightened with
+`warpQuad` (`quad`), or `detectPageQuad` (`auto`) → `recognizeSolfa`.
+
+| Photo | Conditions | Mode | Baseline | Final | Time (desktop) |
+|---|---|---|---|---|---|
+| in-your-arms (SATB, 4 rows per system, lyrics, leaders) | wrinkled paper, shadows, stains, slight curvature; medium accent printed as short `I`; bold sans font | rect crop | 22.9 % | **78.6 %** (separators 100 %) | 4.7 s |
+| | | whole photo (auto: page fills the frame → no warp) | — | 71.9 % | 6.0 s |
+| when-we-all-get-together (SATB in ruled tables) | strong perspective, pink tint, blue highlighter and pen, thin serif font, tiny colons | rect crop | 0.0 % | 0.5 % | 2.6 s |
+| | | 4 corners + `warpQuad` | 3.1 % | **18.8 %** (separators 54 %) | 3.6 s |
+
+Baseline = the A-09 pipeline (luma grey, 2400 px photos). Time = recognition only, worker loaded;
+mid-range phones are typically 5–10× slower (≈ 25–45 s for a full 12 MP page — over the FR-11
+budget; see limits).
+
+What fixed most (in-your-arms): reading the short `I` bars as `!` (+22 points), page x-height for
+mis-measured rows (+14), erased ruled lines / tall bars (+6), merged colons (+6), robust grey.
+What still fails:
+* in-your-arms: letter misreads by Tesseract on the bold, blurred font (`r`→`s`, `t,`→`f`,
+  `si`→`s`), lost commas in `s,.l,`, `f,s,`; the segno sign `$` and its arrow line are read as
+  notes in bar 2; lyric rows with hand-drawn leader lines become noisy `W:` lines.
+* when-we-all-get-together: even straightened, the thin serif glyphs and 2–3 px colon dots are
+  at the limit of the photo's resolution; stray dots/apostrophes from paper texture and the
+  remains of the slanted table lines are taken for marks; the rectangle crop alone cannot cope
+  with the keystone distortion (rows slope differently top and bottom) — the 4-corner
+  straightening is needed for such photos.
+
+### Photo tips (for the help page)
+1. Lay the sheet flat on a **dark, plain** surface (table, cloth), not on other papers: the page
+   outline can then be found and straightened automatically.
+2. Hold the phone **parallel to the page**, directly above it, the page filling the frame
+   (avoid shooting at an angle: rows then slope and shrink towards the far edge).
+3. Use **daylight or even light**; avoid the phone's own shadow and the flash glare; no coloured
+   (pink/purple) lamps.
+4. Flatten folds and curls (hold the corners down or put a book on the edges).
+5. One page per photo, **in focus** (tap to focus, hold still); for a long score, photograph each
+   half separately rather than the whole page from far away.
+6. Crop tightly to the music (leave out titles of other songs, handwritten notes, other sheets),
+   and use the 4-corner crop when the page is not perfectly square in the picture.
+7. Coloured pen and highlighter marks are mostly ignored, but pencil notes and black pen
+   corrections on the music will be read — use a clean copy if you have one.
+
 ## 4. Handwriting (A-10)
 
 `recognizeSolfa(canvas, { handwriting: true })`: blur ≥ 1, larger Sauvola window and k 0.25,
@@ -158,9 +226,13 @@ the handwriting option. **No real handwritten score has been tested** (needs pho
 choir, task X-02).
 
 ## 5. Known limits
-* Real photos not benchmarked yet (synthetic pages only): perspective (keystone) distortion,
-  curved pages, strong shadows across text and very low light are untested. The user crops and
-  rotates first; the pipeline corrects only small rotations (±15°).
+* Only two real photos so far (printed): 78.6 % and 18.8 % of beat cells. Thin serif fonts with
+  tiny colons, tables photographed at an angle and bold blurred print are the hard cases;
+  perspective needs the 4-corner straightening (`warpQuad`); curved pages are not corrected.
+* `detectPageQuad` only works when the page stands out on a darker, uncoloured background and
+  does not touch the photo border; otherwise it returns `null`.
+* Full 12 MP photos take ≈ 5 s on a desktop, so likely 25–45 s on a mid-range phone (FR-11 asks
+  < 20 s): crop to the music, or lower `loadImageToCanvas`'s `maxSide` on slow devices (X-14).
 * Real handwriting: letters that touch, separators drawn as short strokes, dots that merge into
   letters and irregular baselines will break the geometry; expect heavy correction.
 * Columns must line up across voices (true for printed sol-fa). When they do not, a system is
@@ -172,8 +244,12 @@ choir, task X-02).
 * Not recognised: dynamics, `{…}` text, repeats, slurs, `ˢd`-style bridge notes, superscript
   digits used as octave marks are treated like apostrophes/commas only by position.
 * `te` vs `ta` and other chromatic vowels rely on Tesseract alone.
-* Images are processed on the main thread in steps with `setTimeout(0)` yields; very large photos
-  are scaled down to 2600 px first.
+* Images are processed on the main thread in steps with `setTimeout(0)` yields; working images
+  are capped at 3400 px / 12 MP.
+* Non-music markings (`$` segno, `DC`, `END`, `P`, `RP`, `Slow`, arrows) are not understood:
+  between rows they become words lines; inside a music row they may be read as notes.
+* Parentheses around notes are dropped; superscript `¹` is read as an octave mark only by its
+  position (above right of a note).
 
 ## 6. Ideas for M4
 * Measure on real choir photos (printed + handwritten), add them as fixtures (X-02).
@@ -184,6 +260,7 @@ choir, task X-02).
   (X-04). It would also make handwriting realistic.
 * Move preprocessing + component analysis into a Web Worker (OffscreenCanvas) to keep the UI
   fully responsive on slow phones.
-* Perspective correction from the page outline (4-corner crop in the scan screen).
+* 4-corner crop in the scan screen using `warpQuad` / `detectPageQuad` (X-15, interface).
+* A better page-outline detector (edge lines / Hough) that works when other sheets are behind.
 * One engine call per page: stack all letter strips in one image (PSM 6) to save per-call
   overhead on slow devices.

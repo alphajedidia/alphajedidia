@@ -103,6 +103,9 @@ export function classifyShape(c: Box & { area: number }, m: RowMetrics, opts: Sh
     }
     if (bottom >= 0.18) return { kind: 'stroke', conf: 0.8 }; // `!` stroke ends above baseline
   }
+  // Parenthesis around a note, `(m)`: tall, thin, curved (little ink in its box), reaching
+  // below the baseline. Ignored: the note inside is a plain note.
+  if (h >= 1.2 && h <= asc + 0.9 && bottom <= -0.12 && w <= 0.55 && fill < 0.45) return { kind: 'noise', conf: 0.6 };
   // Thick, very tall solid rule: the heavy stroke of a final double bar.
   if (h >= asc + 0.5 && w <= 0.8 && fill >= 0.75) return { kind: 'bar', conf: 0.8 };
   // Short horizontal line.

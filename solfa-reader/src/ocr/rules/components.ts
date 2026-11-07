@@ -131,7 +131,8 @@ export function splitPageComponents(comps: readonly Component[], charH: number, 
     else if (h >= 2.6 * charH && w <= Math.max(3, 0.35 * charH) && c.area >= 0.5 * h) out.vertical.push(c);
     // The heavy stroke of a ruled final double bar is wider but solid.
     else if (h >= 3.5 * charH && w <= 0.7 * charH && c.area >= 0.85 * w * h) out.vertical.push(c);
-    else if (w >= 8 * charH && h <= Math.max(3, 0.3 * charH)) out.horizontal.push(c);
+    // Long thin pieces: rules, pieces of table lines (a hold dash is at most ~1.5 x-heights).
+    else if (w >= 3 * charH && h <= Math.max(3, 0.3 * charH)) out.horizontal.push(c);
     else out.rest.push(c);
   }
   return out;

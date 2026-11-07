@@ -43,6 +43,7 @@ try {
       const res = await page.evaluate(([u, o]) => window.__ocrReal(u, o), [`/scripts/ocr-bench/real/${id}.jpg`, opts]);
       const sc = scoreDoc(truth, res.text);
       rows.push({ id, mode, ...sc, ms: res.ms, parse: res.parse, warnings: res.warnings });
+      if (res.quad) console.log("   auto quad:", JSON.stringify(res.quad.map((p) => [Math.round(p.x), Math.round(p.y)])), "size", res.size);
       console.log(`${id.padEnd(26)} ${mode.padEnd(5)} cells ${pct(sc.accuracy).padStart(6)} (${sc.correct}/${sc.cells})  content ${pct(sc.contentAccuracy)}  seps ${pct(sc.sepAccuracy)}  systems ${sc.systemsPred}  key ${sc.keyOk ? 'ok' : 'NO'}  parse ${res.parse.errors === 0 ? 'ok' : 'ERR'} ${res.parse.codes.join(',')}  ${res.ms} ms  [${res.warnings.join(',')}]`);
       if (args.verbose) console.log(sc.errors.slice(0, 30).join('\n') + '\n' + res.text);
       writeFileSync(join(outDir, `real-${id}-${mode}.txt`), res.text);

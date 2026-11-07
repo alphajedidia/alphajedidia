@@ -125,5 +125,22 @@ export function findPageQuad(paper: Bitmap): { corners: Point[]; coverage: numbe
       if (d < bl.s) bl = { x, y: y + 1, s: d };
     }
   }
-  return { corners: [tl, tr, br, bl].map(({ x, y }) => ({ x, y })), coverage };
+  const corners = [tl, tr, br, bl].map(({ x, y }) => ({ x, y }));
+  // A page that runs off the photo (or merges with other sheets behind it) has corners on the
+  // border: its outline is unknown, so do not guess.
+  const mx = 0.01 * paper.width + 1;
+  const my = 0.01 * paper.height + 1;
+  const onBorder = corners.filter((p) => p.x <= mx || p.y <= my || p.x >= paper.width - mx || p.y >= paper.height - my);
+  if (onBorder.length > 0) return null;
+  // Must be a convex quadrilateral (cross products of consecutive edges share one sign).
+  let sign = 0;
+  for (let i = 0; i < 4; i++) {
+    const a = corners[i];
+    const b = corners[(i + 1) % 4];
+    const c = corners[(i + 2) % 4];
+    const z = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+    if (z === 0 || (sign !== 0 && Math.sign(z) !== sign)) return null;
+    sign = Math.sign(z);
+  }
+  return { corners, coverage };
 }

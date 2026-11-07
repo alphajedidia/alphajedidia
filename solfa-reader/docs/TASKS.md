@@ -74,7 +74,7 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | ID | Task | Suggested owner |
 |---|---|---|
 | X-01 | Native-speaker review of Malagasy texts | user |
-| X-02 | Benchmark with real photos from the choir (printed + handwritten) — needs photos from the user | ai |
+| X-02 | Benchmark with real photos from the choir (printed + handwritten) — **doing** 2026-11-07: 2 printed photos benchmarked (`scripts/ocr-bench/run-real.mjs`, photos + ground truth git-ignored); in-your-arms 22.9 % → 78.6 %, when-we-all (table, angled) 3.1 % → 18.8 % with 4-corner straightening; handwritten photos still needed | ai |
 | X-03 | Learn from corrections: local per-user confusion statistics to improve rules | ai |
 | X-04 | Small custom symbol classifier (TF.js/ONNX) for handwriting | ai |
 | X-05 | Repeats / D.C. / endings expansion | backend |
@@ -86,7 +86,7 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | X-12 | Native-speaker check of the sample titles/words (`Fanazaram-peo`, `Fiadanana`, `Hira maraina`) | user |
 | X-13 | Lighthouse audit of the built PWA (installable, a11y, tap targets) + per-theme `theme-color` meta and `apple-touch-icon.png` link in index.html | orchestrator + design |
 | X-14 | OCR: move preprocessing + component analysis into a Web Worker (OffscreenCanvas) for slow phones | ai |
-| X-15 | Scan screen: 4-corner crop with perspective correction before OCR | ai + interface |
+| X-15 | Scan screen: 4-corner crop with perspective correction before OCR — OCR part **done** (`warpQuad(canvas, corners)`, `detectPageQuad(canvas)` exported from `src/ocr`); scan-screen UI still todo | ai + interface |
 | X-16 | OCR on a real mid-range phone: measure time per page (FR-11 < 20 s) | orchestrator + ai |
 | X-17 | `Diagnostic` structured params (counts for `beat-count-mismatch`/`bar-count-mismatch`) — the UI reads them from the English message today | backend |
 | X-18 | `data-testid` / rest-prop passthrough on `TransportBar`, `VoiceMixerRow`, `Chip`, `SegmentedControl` options (interface tags them through the DOM today, `useTestIds`) | design |

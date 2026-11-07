@@ -410,3 +410,31 @@ the public `getStorageBackend()` (X-19). Toasts are lifted per route with `--sr-
 (player 112 px, editor 270 px above the keypad, screens with a bottom bar 96–136 px).
 **Consequences.** Test ids depend on component class names (`.sr-transport__controls`,
 `.sr-mixrow__toggle`); a design refactor must keep them or forward the ids.
+
+### ADR-037 — OCR on real photos: robust grey, table removal, medium-accent strokes
+*2026-11-07 · accepted · solfa-ai (X-02, X-15)*
+**Context.** The first two real choir photos (wrinkled, shadowed, pink-tinted, stained, blue pen
+and highlighter, a score printed in tables, strong perspective) scored 22.9 % and 0–3 % of beat
+cells with the pipeline tuned on synthetic pages.
+**Decision.**
+* Grey = darkest channel for neutral pixels (best ink/paper contrast on tinted paper), brightest
+  channel for *light coloured* pixels (blue pen, highlighter on paper, coffee stains); black ink
+  under a highlighter stays dark. (A global contrast stretch and a lower Sauvola k were tried and
+  rejected: noise exploded.)
+* Photos are decoded up to 4000 px (`loadImageToCanvas` default) and worked on up to 3400 px /
+  12 MP: small print on a whole page needs the pixels.
+* Ruled lines are erased before layout: long thin runs (±1 px slope) and "frames" (big blobs
+  thin on average, i.e. tables bent by perspective); their vertical parts become bar lines.
+* A lone stroke shaped like `l` that sits inside a beat (`- I s`) or in a column of strokes
+  across most voices is the medium accent `!` (books print it as a short `I`).
+* A lone x-height thin blob on the baseline is a colon whose dots merged; unpaired dots
+  floating above the dot line are stubby holds; tiny colon dots pair with looser size ratios;
+  octave apostrophes glued to their letter are detected from the blob's top-right; parentheses
+  are ignored; rows must contain notes; a row whose x-height is far from the page's takes the
+  page's.
+* `warpQuad(canvas, corners)` straightens a photographed page; `detectPageQuad(canvas)` finds
+  the page outline only when it stands out on a contrasting background, else returns null
+  (no guessing).
+**Consequences.** Real photos: 78.6 % (in-your-arms) and 18.8 % (table page, straightened);
+synthetic pages improved too (99.8 % clean, 99.5 % degraded). Photos and their transcriptions
+stay git-ignored (`scripts/ocr-bench/real/`, copyright).

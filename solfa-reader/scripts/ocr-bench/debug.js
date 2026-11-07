@@ -9,8 +9,14 @@ const SHORT = { bar: '|', colon: ':', medium: '!', dot: '.', comma: ',', apostro
 export async function debugOverlay(canvas, handwriting = false) {
   const w = await prepareWorkImage(canvas, handwriting);
   const page = analyzePage(w.bin, { handwriting });
-  const c = bitmapToCanvas(w.bin);
+  // Draw what the analysis sees: components after ruled-line removal (frames in light grey).
+  const lab = page.labelled;
+  const data = new Uint8Array(lab.width * lab.height);
+  for (let i = 0; i < data.length; i++) data[i] = lab.labels[i] ? 1 : 0;
+  const c = bitmapToCanvas({ width: lab.width, height: lab.height, data });
   const x = c.getContext('2d');
+  x.fillStyle = 'rgba(255,0,0,.35)';
+  for (const r of page.verticalRules) x.fillRect(r.x0 - 2, r.y0, r.x1 - r.x0 + 4, r.y1 - r.y0);
   x.lineWidth = 1;
   const rows = [];
   for (const r of page.rows) {

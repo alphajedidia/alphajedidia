@@ -28,6 +28,8 @@ export interface PageResult {
 interface MusicRowOut {
   y: number;
   box: Box;
+  /** Text-line box from the row metrics (robust to stray blobs stretching the band). */
+  core: Box;
   tokens: Token[];
   label: VoiceId | null;
   labelBox?: Box;
@@ -44,7 +46,8 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
     const box: Box = { x0: row.band.x0, y0: row.band.y0, x1: row.band.x1, y1: row.band.y1 };
     if (row.kind === 'music') {
       const r = buildRowTokens(row.items, rd.notes.get(row.index) ?? [], row.metrics, pageAsc);
-      music.push({ y: row.metrics.baseline - row.metrics.ascHeight, box, tokens: r.tokens, label: r.label, labelBox: r.labelBox });
+      const core = { x0: box.x0, x1: box.x1, y0: row.metrics.baseline - row.metrics.ascHeight, y1: row.metrics.baseline + 0.35 * row.metrics.xHeight };
+      music.push({ y: core.y0, box, core, tokens: r.tokens, label: r.label, labelBox: r.labelBox });
       continue;
     }
     const t = rd.texts.get(row.index);
@@ -52,7 +55,7 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
     if (!text) continue;
     const kind = classifyRowText(text);
     if (kind === 'music') {
-      music.push({ y: row.band.y0, box, tokens: tokensFromText(normalizeMusicLine(text), box), label: null });
+      music.push({ y: row.band.y0, box, core: box, tokens: tokensFromText(normalizeMusicLine(text), box), label: null });
       warnings.push('music-read-as-text');
     } else texts.push({ y: row.band.y0, box, text, conf: t?.conf ?? 0, kind });
   }
@@ -60,7 +63,7 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
   if (music.length === 0 && !warnings.includes('no-music-found')) warnings.push('no-music-found');
 
   const groups = groupSystems(
-    music.map((m) => ({ box: m.box, seps: m.tokens.filter((t) => t.kind === 'sep').map(tokenX) })),
+    music.map((m) => ({ box: m.core, seps: m.tokens.filter((t) => t.kind === 'sep').map(tokenX) })),
     page.verticalRules,
     page.xHeight,
     4,

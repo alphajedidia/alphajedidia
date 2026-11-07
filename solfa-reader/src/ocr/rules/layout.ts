@@ -1,7 +1,7 @@
 // Page layout (A-04): rows from components, row kinds (music / words / header), systems,
 // voice order.
 import { VOICE_IDS, type VoiceId } from '../../core/model';
-import { bh, bw, cy, median, yOverlap, type Box, type Component } from './geometry';
+import { bh, bw, cy, yOverlap, type Box, type Component } from './geometry';
 
 /** A horizontal band of text and the components assigned to it. */
 export interface RowBand extends Box {
@@ -24,10 +24,10 @@ export function segmentRows(comps: readonly Component[], charH: number): RowBand
       start = -1;
     }
   }
-  // Split runs that hold two touching rows at their deepest valley.
-  const typical = median(runs.map(([a, b]) => b - a));
+  // Split runs that hold two touching rows at their deepest valley. (Only the character height
+  // decides what is "too tall": on a crowded page most runs may be merged pairs.)
   const split = (a: number, b: number, depth: number): [number, number][] => {
-    if (depth > 6 || b - a < Math.max(2.2 * charH, 1.7 * typical)) return [[a, b]];
+    if (depth > 6 || b - a < 1.9 * charH) return [[a, b]];
     let peak = 0;
     for (let y = a; y < b; y++) peak = Math.max(peak, prof[y]);
     let best = -1;

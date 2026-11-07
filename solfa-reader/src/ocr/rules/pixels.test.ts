@@ -109,3 +109,26 @@ describe('pixels — noise', () => {
     expect(boxBlur(noisy, 0)).toBe(noisy);
   });
 });
+
+describe('pixels — colour photos', () => {
+  it('robust grey: dark ink stays dark, coloured paper / pen / stains turn light', async () => {
+    const { toGrayRobust, toGrayMax } = await import('./pixels');
+    const px = (r: number, g: number, b: number) => [r, g, b, 255];
+    const rgba = new Uint8Array([
+      ...px(20, 20, 25), // black ink
+      ...px(245, 196, 240), // pink paper
+      ...px(60, 90, 220), // blue pen
+      ...px(25, 25, 80), // black ink under blue highlighter
+      ...px(215, 190, 120), // coffee stain
+      ...px(150, 120, 150), // faint grey-purple print
+    ]);
+    const g = toGrayRobust(rgba, 6, 1).data;
+    expect(g[0]).toBeLessThan(40);
+    expect(g[1]).toBeGreaterThan(190);
+    expect(g[2]).toBeGreaterThan(190);
+    expect(g[3]).toBeLessThan(60);
+    expect(g[4]).toBeGreaterThan(190);
+    expect(g[5]).toBeLessThan(g[1] - 60); // keeps the contrast the max channel loses
+    expect(toGrayMax(rgba, 6, 1).data[2]).toBe(220);
+  });
+});

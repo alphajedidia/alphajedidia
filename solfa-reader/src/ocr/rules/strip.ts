@@ -2,7 +2,7 @@
 // without separators and small marks) and laid out with wide gaps, so the text engine reads
 // each note as a separate word and cannot confuse it with `:` `|` `.` `,` around it.
 import type { Labelled } from './components';
-import { bh, bw, type Bitmap, type Box } from './geometry';
+import { bh, bw, type Bitmap, type Box, type GrayImage } from './geometry';
 import type { RowMetrics } from './symbols';
 
 export interface StripCluster {
@@ -30,7 +30,8 @@ export function composeStrip(
   lab: Labelled,
   clusters: readonly StripCluster[],
   m: RowMetrics,
-): { bitmap: Bitmap; plan: StripPlan } {
+  grayImg?: GrayImage,
+): { bitmap: Bitmap; plan: StripPlan; gray?: GrayImage } {
   const xh = Math.max(2, m.xHeight);
   const gap = Math.round(1.3 * xh);
   const pad = Math.round(0.8 * xh);
@@ -59,7 +60,27 @@ export function composeStrip(
       }
     }
   }
-  return { bitmap: { width, height, data }, plan: { width, height, placements } };
+  const plan = { width, height, placements };
+  if (!grayImg) return { bitmap: { width, height, data }, plan };
+  // Grey strip: the cluster's box with its anti-aliased edges, other blobs painted white.
+  // Small blurry print keeps details (r vs s, t vs f) that thresholding destroys.
+  const g = new Uint8Array(width * height).fill(255);
+  for (const p of placements) {
+    const ids = new Set(clusters[p.index].ids);
+    for (let y = p.src.y0 - 1; y <= p.src.y1; y++) {
+      const ty = p.dst.y0 + (y - p.src.y0);
+      if (ty < 0 || ty >= height || y < 0 || y >= lab.height) continue;
+      for (let x = p.src.x0 - 1; x <= p.src.x1; x++) {
+        const tx = p.dst.x0 + (x - p.src.x0);
+        if (x < 0 || x >= lab.width || tx < 0 || tx >= width) continue;
+        const l = lab.labels[y * lab.width + x];
+        if (l !== 0 && !ids.has(l)) continue;
+        if (l === 0 && !nearIds(lab, x, y, ids)) continue;
+        g[ty * width + tx] = grayImg.data[y * grayImg.width + x];
+      }
+    }
+  }
+  return { bitmap: { width, height, data }, plan, gray: { width, height, data: g } };
 }
 
 /** A recognised character with its box in strip pixels (after the adapter's scaling). */
@@ -105,4 +126,17 @@ export function assignReadings(plan: StripPlan, symbols: readonly StripSymbol[],
     ps.sort((a, b) => a.x - b.x);
     return { text: ps.map((p) => p.text).join(''), conf: Math.min(...ps.map((p) => p.conf)) };
   });
+}
+
+/** Is a paper pixel next to one of the cluster's ink pixels (its anti-aliased edge)? */
+function nearIds(lab: Labelled, x: number, y: number, ids: ReadonlySet<number>): boolean {
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const xx = x + dx;
+      const yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= lab.width || yy >= lab.height) continue;
+      if (ids.has(lab.labels[yy * lab.width + xx])) return true;
+    }
+  }
+  return false;
 }

@@ -2,7 +2,8 @@
 // the letter strips the text engine must read. The adapter (../recognize.ts) runs the engine
 // on the strips and hands the readings to ./result.ts.
 import { labelComponents, estimateCharHeight, splitPageComponents, type Labelled } from './components';
-import { bh, cx, median, yOverlap, type Bitmap, type Box, type Component } from './geometry';
+import { bh, bw, cx, median, yOverlap, type Bitmap, type Box, type Component } from './geometry';
+import { findFrames, removeRuledLines } from './lines';
 import { segmentRows, type RowBand } from './layout';
 import { countSeparators, groupRowItems, hasGluedApostrophe, type RowItem } from './marks';
 import type { StripCluster } from './strip';
@@ -38,22 +39,40 @@ export interface PageAnalysis {
 /** Analyse the layout of a binarized page. */
 export function analyzePage(bitmap: Bitmap, opts: PageOptions = {}): PageAnalysis {
   const loose = opts.handwriting ? 1.4 : 1;
-  const labelled = labelComponents(bitmap);
+  let labelled = labelComponents(bitmap);
   const warnings: string[] = [];
   const charH = estimateCharHeight(labelled.components);
   if (charH === 0) {
     return { labelled, charH: 0, xHeight: 0, rows: [], verticalRules: [], warnings: ['no-text-found'] };
   }
-  const split = splitPageComponents(labelled.components, charH, loose);
+  // Tables and frames: erase ruled lines (they glue rows together) and keep the vertical ones
+  // as bar lines. Only when the page has long blobs, so plain pages are not touched.
+  const ruledCandidates = labelled.components.some((c) => bw(c) >= 8 * charH || bh(c) >= 3 * charH);
+  const lines = ruledCandidates ? removeRuledLines(bitmap, charH) : null;
+  if (lines) labelled = labelComponents(lines.cleaned);
+  const frames = lines ? findFrames(labelled, charH) : { ids: new Set<number>(), vertical: [] };
+  const split = splitPageComponents(
+    labelled.components.filter((c) => !frames.ids.has(c.id)),
+    charH,
+    loose,
+  );
+  for (const v of [...(lines?.vertical ?? []), ...frames.vertical]) split.vertical.push({ ...v, id: 0 });
   const bands = segmentRows(split.rest, charH);
   const first = bands.map((b) => measureRow(b.comps));
   const measured = first.filter((m): m is RowMetrics => !!m && m.measured).map((m) => m.xHeight);
   const xHeight = measured.length ? median(measured) : median(first.filter((m) => !!m).map((m) => m!.xHeight));
   if (xHeight < 8) warnings.push('low-resolution');
+  const ratios = first.filter((m): m is RowMetrics => !!m && m.measured).map((m) => m.ascHeight / m.xHeight);
+  const pageAscRatio = ratios.length ? median(ratios) : 1.4;
   const rows: AnalyzedRow[] = [];
   bands.forEach((band, i) => {
-    const metrics = first[i]?.measured ? first[i] : measureRow(band.comps, xHeight);
+    let metrics = first[i]?.measured ? first[i] : measureRow(band.comps, xHeight);
     if (!metrics) return;
+    // Print size is uniform on a page: a row measured far from the page x-height was misled
+    // (commas, stains, a row of only tall letters) — keep its baseline, take the page sizes.
+    if (xHeight > 0 && Math.abs(metrics.xHeight / xHeight - 1) > 0.3) {
+      metrics = { ...metrics, xHeight, ascHeight: xHeight * pageAscRatio, measured: false };
+    }
     const items = groupRowItems(band.comps, metrics, { loose });
     for (const it of items) {
       if (it.kind === 'note' && it.comps.length === 1 && hasGluedApostrophe(labelled, it.comps[0], metrics)) it.gluedUp = true;
@@ -64,7 +83,9 @@ export function analyzePage(bitmap: Bitmap, opts: PageOptions = {}): PageAnalysi
     const notes = items.filter((it) => it.kind === 'note');
     // Music rows alternate separators and short note clusters (a word is ≥ 3 x-heights wide).
     const wide = notes.filter((n) => n.box.x1 - n.box.x0 > 2.6 * metrics.xHeight).length;
-    const music = seps >= 2 && seps >= 0.25 * (notes.length + 1) && wide <= 0.3 * notes.length;
+    // (Bar lines alone — e.g. ends of ruled lines below a system — are not a voice row.)
+    const holds = items.filter((it) => it.kind === 'dash').length;
+    const music = seps >= 2 && notes.length + holds >= 2 && seps >= 0.25 * (notes.length + 1) && wide <= 0.3 * notes.length;
     rows.push({
       index: rows.length,
       band,

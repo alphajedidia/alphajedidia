@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { analyzePage } from './page';
-import { buildResult, type EngineReadings } from './result';
+import { buildResult, cleanTextRow, type EngineReadings } from './result';
 import { blank, drawRow } from './testing';
 import { formatSolfa, parseSolfa } from '../../core';
 
@@ -94,5 +94,11 @@ describe('result — whole pipeline on a synthetic page (pure part)', () => {
   it('warns when there is no music', () => {
     const empty = analyzePage(blank(100, 100));
     expect(buildResult(empty, { notes: new Map(), texts: new Map() }).warnings).toContain('no-text-found');
+  });
+
+  it('drops dotted leader lines and stray marks from text rows', () => {
+    expect(cleanTextRow('hmmm...(+Narration)..........................')).toBe('hmmm (+Narration)');
+    expect(cleanTextRow('— . , |')).toBe('');
+    expect(cleanTextRow('pas - tures of peace')).toBe('pas - tures of peace');
   });
 });

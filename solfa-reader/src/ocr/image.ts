@@ -2,7 +2,7 @@
 // live in ./rules/pixels.ts so they are unit-tested in node.
 import type { Rect } from './types';
 import type { Bitmap, GrayImage } from './rules/geometry';
-import { binarizeSauvola, boxBlur, estimateNoise, estimateSkew, flattenIllumination, majorityFilter, otsuThreshold, toGray, toGrayMax } from './rules/pixels';
+import { binarizeSauvola, boxBlur, estimateNoise, estimateSkew, flattenIllumination, majorityFilter, otsuThreshold, toGray, toGrayRobust } from './rules/pixels';
 import { findPageQuad, quadSize, warpRgba, type Point } from './rules/perspective';
 
 /** Create a canvas (DOM). */
@@ -113,10 +113,10 @@ export function scaleCanvas(canvas: HTMLCanvasElement, factor: number): HTMLCanv
   return c;
 }
 
-/** Grey pixels of a canvas (brightest channel: ignores paper tint and coloured pen marks). */
+/** Grey pixels of a canvas (robust to paper tint and coloured pen marks, see toGrayRobust). */
 export function canvasToGray(canvas: HTMLCanvasElement): GrayImage {
   const d = ctx2d(canvas).getImageData(0, 0, canvas.width, canvas.height);
-  return toGrayMax(d.data, canvas.width, canvas.height);
+  return toGrayRobust(d.data, canvas.width, canvas.height);
 }
 
 /**
@@ -188,6 +188,11 @@ export interface PreprocessOptions {
 
 /** Grey → flattened lighting → adaptive threshold (→ speckle cleaning for handwriting). */
 export function preprocessGray(gray: GrayImage, opts: PreprocessOptions = {}): Bitmap {
+  return preprocessGrayFull(gray, opts).bin;
+}
+
+/** Same as preprocessGray, also returning the cleaned grey image (for letter strips). */
+export function preprocessGrayFull(gray: GrayImage, opts: PreprocessOptions = {}): { bin: Bitmap; flat: GrayImage } {
   // Noisy photos (dim light, cheap sensors) need smoothing or Sauvola turns grain into specks.
   const noise = estimateNoise(gray);
   const blurR = noise > 14 ? 2 : noise > 4 || opts.handwriting ? 1 : 0;
@@ -196,7 +201,20 @@ export function preprocessGray(gray: GrayImage, opts: PreprocessOptions = {}): B
   const radius = opts.charH ? Math.max(8, Math.round(opts.charH * (opts.handwriting ? 1.6 : 1.2))) : undefined;
   let b = binarizeSauvola(flat, { radius, k: opts.handwriting ? 0.25 : 0.2 });
   if (opts.handwriting) b = majorityFilter(b);
-  return b;
+  return { bin: b, flat };
+}
+
+/** Draw a grey image into a canvas, scaled by `scale`. */
+export function grayToCanvas(g: GrayImage, scale = 1): HTMLCanvasElement {
+  const src = createCanvas(g.width, g.height);
+  const ctx = ctx2d(src);
+  const img = ctx.createImageData(g.width, g.height);
+  for (let i = 0, j = 0; i < g.data.length; i++, j += 4) {
+    img.data[j] = img.data[j + 1] = img.data[j + 2] = g.data[i];
+    img.data[j + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return scale === 1 ? src : scaleCanvas(src, scale);
 }
 
 /** Detect the skew of a canvas (degrees, positive = clockwise) from a reduced binarized copy. */

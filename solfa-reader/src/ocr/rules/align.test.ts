@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alignSystem, beatCount, clusterColumns } from './align';
+import { alignSystem, beatCount, clusterColumns, promoteMediumStrokes } from './align';
 import { cellText, tokensFromText, type Token } from './tokens';
 
 /** Tokens from a monospaced line: 10 px per character, so columns line up like the text. */
@@ -47,5 +47,20 @@ describe('align — beat columns across voices', () => {
     const sys = alignSystem([toks('| m :m :f :s |'), toks('  | d  :d    :t   |')], 10, { tolerance: 0.3 });
     expect(sys.mode).toBe('sequential');
     expect(beatCount(sys.voices[1])).toBe(3);
+  });
+
+  it('reads a short `I` printed as medium accent (looks like `l`) as `!`', () => {
+    const mk = (line: string) => {
+      const t = toks(line);
+      // the printed `I` is read as a lone lah-shaped stroke
+      return t.map((k) => (k.kind === 'note' && k.text === 'l' && k.box.x0 === 70 ? { ...k, alt: 'bar' as const } : k));
+    };
+    const rows = [mk('| d :- l s :m |'), mk('| m :- l r :d |'), mk('| s :s l l :d |'), mk('| d :- l f :m |')];
+    const out = promoteMediumStrokes(rows, 10);
+    for (const r of out) expect(r.find((t) => t.box.x0 === 70)).toMatchObject({ kind: 'sep', text: '!', reason: 'lah-as-medium' });
+    // the real lah of voice 3 (x = 90) stays a note
+    expect(out[2].find((t) => t.box.x0 === 90)).toMatchObject({ kind: 'note', text: 'l' });
+    const sys = alignSystem(rows, 10);
+    expect(show(sys.voices[2])).toBe(' |s :s !l :d |');
   });
 });
