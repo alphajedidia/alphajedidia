@@ -234,3 +234,12 @@ throws `ShareDecodeError` with a `code` (`empty`, `bad-prefix`, `bad-encoding`, 
 UTF-8.
 **Consequences.** The share screen can map each code to a translated message; a 4-voice song
 fits well under 2000 characters (tested on the samples).
+
+### ADR-023 — Unreadable `time:` gives a `bad-time` warning
+*2026-11-07 · accepted · orchestrator · supersedes the "time: silently ignored" point of ADR-019*
+**Context.** ADR-019 ignored an unreadable `time:` value silently because §8 had no code for it.
+Silent failures confuse users who typed a time signature.
+**Decision.** SOLFA_FORMAT §8 adds `bad-time` (warning, underline on the value); an earlier valid
+`time:` is kept, otherwise the time is inferred. `internal-error` is also listed in §8 as the
+parser's safety net.
+**Consequences.** The editor can tell the user exactly which header is wrong.

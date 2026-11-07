@@ -82,5 +82,5 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | X-07 | MP3 export (smaller files for WhatsApp) | backend |
 | X-08 | Lyrics aligned under notes | backend + interface |
 | X-09 | Media Session API (lock-screen play/pause, song title) for the player | backend + interface |
-| X-11 | SOLFA_FORMAT: add a `bad-time` diagnostic code and document "a repeated voice label starts a new system" (ADR-019) | orchestrator + backend |
+| X-11 | SOLFA_FORMAT: add a `bad-time` diagnostic code and document "a repeated voice label starts a new system" (ADR-019) — **done** 2026-11-07 (spec §2/§8/§9 updated, parser emits `bad-time`) | orchestrator + backend |
 | X-12 | Native-speaker check of the sample titles/words (`Fanazaram-peo`, `Fiadanana`, `Hira maraina`) | user |

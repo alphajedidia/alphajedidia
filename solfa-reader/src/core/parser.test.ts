@@ -199,6 +199,19 @@ describe('§3 headers', () => {
     expect(parseSolfa('time: C\n| d |').song.time).toEqual({ beats: 4, unit: 4 });
   });
 
+  it('warns on a time value it cannot read and infers the time instead', () => {
+    const r = parseSolfa('time:  3-4 \n| d :r :m | f |');
+    expect(r.diagnostics).toEqual([
+      { severity: 'warning', code: 'bad-time', message: expect.any(String), line: 0, col: 7, endCol: 10 },
+    ]);
+    expect(r.song.time).toEqual({ beats: 3, unit: 4 });
+    const empty = parseSolfa('time:\n| d |');
+    expect(empty.diagnostics).toEqual([expect.objectContaining({ code: 'bad-time', line: 0, col: 0, endCol: 5 })]);
+    const kept = parseSolfa('time: 6/8\ntime: x/y\n| d |');
+    expect(kept.song.time).toEqual({ beats: 6, unit: 8 });
+    expect(kept.diagnostics.map((d) => [d.code, d.line, d.col, d.endCol])).toEqual([['bad-time', 1, 6, 9]]);
+  });
+
   it('infers time from the first complete bar of the first voice', () => {
     expect(parseSolfa(':s, | d :- :m | r :- :- |').song.time).toEqual({ beats: 3, unit: 4 });
     expect(parseSolfa('| d :r | m :f |').song.time).toEqual({ beats: 2, unit: 4 });

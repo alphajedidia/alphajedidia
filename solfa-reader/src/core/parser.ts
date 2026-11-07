@@ -112,6 +112,8 @@ function applyHeader(st: State, line: HeaderLine): void {
     case 'time': {
       const time = parseTime(header.value);
       if (time) st.time = time;
+      else
+        st.diags.add('warning', 'bad-time', `time "${header.value}" not understood`, index, where.col, where.endCol);
       break;
     }
     case 'tempo': {
