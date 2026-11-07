@@ -83,7 +83,11 @@ const pct = (x) => `${(100 * x).toFixed(1)}%`;
 async function main() {
   let server = null;
   if (!args['no-server']) {
-    server = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], { cwd: root, stdio: 'ignore', detached: true });
+    server = spawn('npx', ['vite', '--config', join(here, 'vite.bench.config.mjs'), '--port', String(PORT), '--strictPort'], {
+      cwd: root,
+      stdio: 'ignore',
+      detached: true,
+    });
   }
   const benchUrl = `http://localhost:${PORT}/scripts/ocr-bench/bench.html`;
   const browser = await chromium.launch();
@@ -100,7 +104,17 @@ async function main() {
       await renderPage.setContent(renderHtml(c.f, c.style));
       const png = await renderPage.screenshot({ fullPage: true, type: 'png' });
       const dataUrl = `data:image/png;base64,${png.toString('base64')}`;
-      const res = await ocrPage.evaluate(([d, deg]) => window.__ocr(d, deg), [dataUrl, c.deg]);
+      const run = () => ocrPage.evaluate(([d, deg]) => window.__ocr(d, deg), [dataUrl, c.deg]);
+      let res;
+      try {
+        res = await run();
+      } catch (e) {
+        // The page may have been reloaded under us: reload once and retry.
+        console.warn('retrying after:', String(e).split('\n')[0]);
+        await ocrPage.goto(benchUrl);
+        await ocrPage.waitForFunction(() => typeof window.__ocr === 'function', null, { timeout: 60000 });
+        res = await run();
+      }
       const sc = scoreDoc(c.f.text, res.text);
       const row = {
         set: c.set,

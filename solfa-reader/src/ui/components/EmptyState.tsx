@@ -11,7 +11,7 @@ export interface EmptyStateProps {
   art?: ReactNode;
   /** Buttons: the next step the user can take. */
   actions?: ReactNode;
-  /** error = something failed (red icon); loading = shows `art`/spinner as is. */
+  /** error = something failed (red icon). For loading, pass a Spinner as `art`. */
   tone?: 'neutral' | 'error';
   /** Heading level. Default h2. */
   headingAs?: 'h2' | 'h3';
