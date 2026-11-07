@@ -3,7 +3,7 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { goBack, navigate } from '../app/navigation';
 import type { ScanStep } from '../app/router';
-import { scanSession } from '../app/session';
+import { releaseScanImages, scanSession } from '../app/session';
 import { useSettings } from '../app/settings';
 import { useToast } from '../app/toasts';
 import { useT } from '../i18n';
@@ -38,8 +38,8 @@ function CaptureStep() {
       const ocr = await import('../ocr');
       const session = scanSession();
       session.ocrLoaded = true;
+      releaseScanImages();
       session.photo = await ocr.loadImageToCanvas(file);
-      session.work = null;
       session.result = null;
       session.text = null;
       session.savedId = null;
@@ -58,7 +58,7 @@ function CaptureStep() {
       <main className="sr-container sr-page__body sr-stack">
         <Card tone="brand" title={t('scan.tipsTitle')} actions={<Icon name="scan" size={32} className="sr-scan__tipsicon" />}>
           <ul className="sr-tips">
-            {(['scan.tip1', 'scan.tip2', 'scan.tip3'] as const).map((k) => (
+            {(['scan.tip1', 'scan.tip2', 'scan.tip3', 'scan.tip4'] as const).map((k) => (
               <li key={k}>
                 <Icon name="check-circle" size={20} />
                 <span>{t(k)}</span>

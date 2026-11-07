@@ -86,7 +86,7 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | X-12 | Native-speaker check of the sample titles/words (`Fanazaram-peo`, `Fiadanana`, `Hira maraina`) | user |
 | X-13 | Lighthouse audit of the built PWA (installable, a11y, tap targets) + per-theme `theme-color` meta and `apple-touch-icon.png` link in index.html | orchestrator + design |
 | X-14 | OCR: move preprocessing + component analysis into a Web Worker (OffscreenCanvas) for slow phones | ai |
-| X-15 | Scan screen: 4-corner crop with perspective correction before OCR — OCR part **done** (`warpQuad(canvas, corners)`, `detectPageQuad(canvas)` exported from `src/ocr`); scan-screen UI still todo | ai + interface |
+| X-15 | Scan screen: 4-corner crop with perspective correction before OCR — OCR part **done** (`warpQuad(canvas, corners)`, `detectPageQuad(canvas)` exported from `src/ocr`); scan-screen UI **done** 2026-11-07 (solfa-interface: 4 draggable/keyboard corners pre-filled by `detectPageQuad`, `warpQuad` on OK, photo strips on the warped canvas, canvases freed; ADR-038) | ai + interface |
 | X-16 | OCR on a real mid-range phone: measure time per page (FR-11 < 20 s) | orchestrator + ai |
 | X-17 | `Diagnostic` structured params (counts for `beat-count-mismatch`/`bar-count-mismatch`) — the UI reads them from the English message today | backend |
 | X-18 | `data-testid` / rest-prop passthrough on `TransportBar`, `VoiceMixerRow`, `Chip`, `SegmentedControl` options (interface tags them through the DOM today, `useTestIds`) | design |

@@ -273,9 +273,10 @@ export const en = {
   // ---- Scan -------------------------------------------------------------------------------
   'scan.title': 'Scan a score',
   'scan.tipsTitle': 'For a good photo',
-  'scan.tip1': 'Flat page, good light',
-  'scan.tip2': 'Phone straight above the page',
-  'scan.tip3': 'One page per photo',
+  'scan.tip1': 'Page flat on a dark, plain surface',
+  'scan.tip2': 'Phone parallel to the page, right above it',
+  'scan.tip3': 'Even daylight: no shadow, no flash',
+  'scan.tip4': 'One page per photo, in focus',
   'scan.kind': 'Kind of score',
   'scan.printed': 'Printed',
   'scan.handwritten': 'Handwritten',
@@ -289,7 +290,7 @@ export const en = {
 
   'crop.title': 'Crop',
   'crop.rotate': 'Rotate',
-  'crop.hint': 'Drag the corners around the music.',
+  'crop.hint': 'Drag the 4 corners onto the corners of the music.',
   'crop.straighten': 'Straighten automatically',
   'crop.retake': 'Retake',
   'crop.read': 'Read the music',
@@ -359,6 +360,9 @@ export const en = {
   'ocrReason.comma-position': 'Comma: octave or quarter beat?',
   'ocrReason.stray-mark': 'Small mark: octave sign or dust?',
   'ocrReason.text-fallback': 'Read as plain text',
+  'ocrReason.lah-as-medium': 'Short stroke: “!” or l?',
+  'ocrReason.merged-colon': 'Two signs read as one “:”?',
+  'ocrReason.glued-octave': 'Octave mark stuck to the note',
   'ocrReason.unknown': 'Please check',
 
   // ---- Settings ---------------------------------------------------------------------------
@@ -406,9 +410,13 @@ export const en = {
   'help.example.title': 'A complete example',
   'help.tryIt': 'Try it in the editor',
   'help.photo.title': 'Tips for a good photo',
-  'help.photo.tip4': 'No shadow of the phone, no shine on the paper',
-  'help.photo.tip5': 'Fill the photo with the music',
-  'help.photo.tip6': 'Hold still, and tap the screen to focus',
+  'help.photo.tip1': 'Lay the sheet flat on a dark, plain surface (table, cloth), not on other papers: the app can then find the page edges and straighten it.',
+  'help.photo.tip2': 'Hold the phone parallel to the page, right above it, with the page filling the picture. Shooting at an angle makes the rows slope.',
+  'help.photo.tip3': 'Use daylight or even light. Avoid the phone’s shadow, flash glare and coloured lamps.',
+  'help.photo.tip4': 'Flatten folds and curls: hold the corners down or put a book on the edges.',
+  'help.photo.tip5': 'One page per photo, in focus (tap to focus, hold still). For a long score, take each half separately.',
+  'help.photo.tip6': 'Leave out other songs, notes and sheets. Move the 4 corners onto the page corners when it is not square in the picture.',
+  'help.photo.tip7': 'Coloured pen and highlighter are mostly ignored, but pencil and black pen notes on the music are read: use a clean copy if you can.',
 } as const;
 
 /** A translation key (English is the reference dictionary). */

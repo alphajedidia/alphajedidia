@@ -1,63 +1,82 @@
 // Crop rectangle maths for the scan "crop" step (pure: image pixel space, no DOM).
 
-export interface CropRect {
+export interface QuadPoint {
   x: number;
   y: number;
-  w: number;
-  h: number;
 }
 
-export type Corner = 'tl' | 'tr' | 'bl' | 'br';
+/** Four corners in the order the OCR expects: top-left, top-right, bottom-right, bottom-left. */
+export type Quad = [QuadPoint, QuadPoint, QuadPoint, QuadPoint];
 
-/** Smallest crop side, in image pixels (a few characters). */
-export function minCropSide(width: number, height: number): number {
-  return Math.max(16, Math.round(Math.min(width, height) * 0.08));
-}
-
-/** The whole image. */
-export function fullCrop(width: number, height: number): CropRect {
-  return { x: 0, y: 0, w: width, h: height };
-}
+export const CORNER_KEYS = ['tl', 'tr', 'br', 'bl'] as const;
+export type CornerKey = (typeof CORNER_KEYS)[number];
 
 function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 
-/** Move one corner to (px, py); the opposite corner stays; result stays inside the image. */
-export function moveCorner(rect: CropRect, corner: Corner, px: number, py: number, width: number, height: number): CropRect {
-  const min = minCropSide(width, height);
-  let left = rect.x;
-  let top = rect.y;
-  let right = rect.x + rect.w;
-  let bottom = rect.y + rect.h;
-  if (corner === 'tl' || corner === 'bl') left = clamp(px, 0, right - min);
-  else right = clamp(px, left + min, width);
-  if (corner === 'tl' || corner === 'tr') top = clamp(py, 0, bottom - min);
-  else bottom = clamp(py, top + min, height);
-  return { x: Math.round(left), y: Math.round(top), w: Math.round(right - left), h: Math.round(bottom - top) };
+/** The whole image. */
+export function fullQuad(width: number, height: number): Quad {
+  return [
+    { x: 0, y: 0 },
+    { x: width, y: 0 },
+    { x: width, y: height },
+    { x: 0, y: height },
+  ];
 }
 
-/** Move the whole rectangle by (dx, dy), kept inside the image. */
-export function moveRect(rect: CropRect, dx: number, dy: number, width: number, height: number): CropRect {
-  return {
-    x: Math.round(clamp(rect.x + dx, 0, width - rect.w)),
-    y: Math.round(clamp(rect.y + dy, 0, height - rect.h)),
-    w: rect.w,
-    h: rect.h,
-  };
+/** Rectangle inset by `f` of each side (fallback when the page outline is not found). */
+export function insetQuad(width: number, height: number, f = 0.04): Quad {
+  const dx = width * f;
+  const dy = height * f;
+  return [
+    { x: dx, y: dy },
+    { x: width - dx, y: dy },
+    { x: width - dx, y: height - dy },
+    { x: dx, y: height - dy },
+  ];
 }
 
-/** Position of a corner. */
-export function cornerPoint(rect: CropRect, corner: Corner): { x: number; y: number } {
-  return {
-    x: corner === 'tl' || corner === 'bl' ? rect.x : rect.x + rect.w,
-    y: corner === 'tl' || corner === 'tr' ? rect.y : rect.y + rect.h,
-  };
+/** Twice the signed area of triangle (a, b, c). */
+function cross(a: QuadPoint, b: QuadPoint, c: QuadPoint): number {
+  return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
-/** True when the crop is (almost) the whole image: no need to copy pixels. */
-export function isFullCrop(rect: CropRect, width: number, height: number): boolean {
-  return rect.x <= 1 && rect.y <= 1 && rect.w >= width - 2 && rect.h >= height - 2;
+/** True when the corners make a convex, clockwise (on screen) quadrilateral of usable size. */
+export function isValidQuad(q: readonly QuadPoint[], minSide = 1): boolean {
+  if (q.length !== 4) return false;
+  for (let i = 0; i < 4; i++) {
+    const a = q[i]!;
+    const b = q[(i + 1) % 4]!;
+    const c = q[(i + 2) % 4]!;
+    if (cross(a, b, c) <= 0) return false;
+    if (Math.hypot(b.x - a.x, b.y - a.y) < minSide) return false;
+  }
+  return true;
+}
+
+/** Smallest side of the crop, in image pixels (a few characters). */
+export function minCropSide(width: number, height: number): number {
+  return Math.max(16, Math.round(Math.min(width, height) * 0.08));
+}
+
+/** Move corner `i` to (x, y) inside the image; a move that would fold the shape is refused. */
+export function moveQuadCorner(q: Quad, i: number, x: number, y: number, width: number, height: number): Quad {
+  const next = q.map((p, j) => (j === i ? { x: Math.round(clamp(x, 0, width)), y: Math.round(clamp(y, 0, height)) } : p)) as Quad;
+  return isValidQuad(next, minCropSide(width, height)) ? next : q;
+}
+
+/** True when the quad is (almost) the whole image: no need to warp a copy. */
+export function isFullQuad(q: readonly QuadPoint[], width: number, height: number): boolean {
+  const full = fullQuad(width, height);
+  return q.every((p, i) => Math.abs(p.x - full[i]!.x) <= 2 && Math.abs(p.y - full[i]!.y) <= 2);
+}
+
+/** Free a canvas's pixel memory now (phones keep large canvases alive until GC). */
+export function releaseCanvas(c: HTMLCanvasElement | null | undefined): void {
+  if (!c) return;
+  c.width = 0;
+  c.height = 0;
 }
 
 /** Weighted overall progress of the reading stages, 0..1. */

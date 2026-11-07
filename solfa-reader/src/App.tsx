@@ -74,7 +74,7 @@ function Shell() {
   const toastOffset: Partial<Record<Route['name'], string>> = {
     library: '136px',
     share: '96px',
-    scan: '96px',
+    scan: '136px',
     play: '112px',
     new: '270px',
     edit: '270px',

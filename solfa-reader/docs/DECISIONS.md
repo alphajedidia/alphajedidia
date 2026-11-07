@@ -438,3 +438,18 @@ cells with the pipeline tuned on synthetic pages.
 **Consequences.** Real photos: 78.6 % (in-your-arms) and 18.8 % (table page, straightened);
 synthetic pages improved too (99.8 % clean, 99.5 % degraded). Photos and their transcriptions
 stay git-ignored (`scripts/ocr-bench/real/`, copyright).
+
+### ADR-038 — Scan crop = 4 corners; at most two large canvases alive
+*2026-11-07 · accepted · solfa-interface (X-15 UI) · supersedes the rectangle crop of ADR-033*
+**Decision.** The crop step shows four corner handles (48 px targets centred on the corners,
+arrow keys move 2 % — Shift 8 %), in the OCR's order TL, TR, BR, BL, over an SVG scrim with an
+even-odd hole. They start on `detectPageQuad(photo)`, else on the whole image (a clean page or a
+screenshot is read as is). A move that would fold the shape (non-convex or a side shorter than
+8 % of the image) is refused (`app/crop.ts`, pure, tested). OK runs `warpQuad` (skipped when the
+corners are the image corners), then `deskewCanvas` if "straighten" is on; that canvas is what
+`recognizeSolfa` and the review photo strips use. Memory: photos decode up to 4000 px (~64 MB
+RGBA), so the session keeps only the photo and one straightened copy; replaced canvases,
+the old photo after a 90° turn and everything on leaving the scan routes get
+`width = height = 0` (`releaseCanvas`), which frees the pixels at once on mobile browsers.
+**Consequences.** Keystone photos are straightened before reading; the e2e flow (clean page →
+`scan-crop-ok`) is unchanged.

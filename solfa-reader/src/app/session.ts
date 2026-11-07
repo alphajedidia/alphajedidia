@@ -2,6 +2,7 @@
 // capture → crop → read → review routes (so the browser back button works), and the help page
 // can open the editor with an example text. Nothing here is persisted.
 import type { RecognitionResult } from '../ocr';
+import { releaseCanvas } from './crop';
 
 export interface ScanSession {
   /** Photo as loaded (EXIF-oriented), after the user's 90° rotations. */
@@ -26,9 +27,18 @@ export function scanSession(): ScanSession {
   return session;
 }
 
+/** Free the photo and the straightened copy now (photos decode up to 4000 px ≈ 64 MB). */
+export function releaseScanImages(): void {
+  if (session.work !== session.photo) releaseCanvas(session.work);
+  releaseCanvas(session.photo);
+  session.photo = null;
+  session.work = null;
+}
+
 /** Forget the photo and result (memory) — and free the OCR worker if it was started. */
 export function clearScanSession(): void {
   const wasLoaded = session.ocrLoaded;
+  releaseScanImages();
   session = empty();
   if (wasLoaded) {
     import('../ocr')

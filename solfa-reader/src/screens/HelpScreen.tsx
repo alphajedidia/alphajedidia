@@ -129,14 +129,14 @@ export default function HelpScreen() {
           </div>
         </Card>
         <Card as="section" tone="brand" title={t('help.photo.title')}>
-          <ul className="sr-tips">
-            {(['scan.tip1', 'scan.tip2', 'scan.tip3', 'help.photo.tip4', 'help.photo.tip5', 'help.photo.tip6'] as const).map((k) => (
+          <ol className="sr-tips">
+            {(['help.photo.tip1', 'help.photo.tip2', 'help.photo.tip3', 'help.photo.tip4', 'help.photo.tip5', 'help.photo.tip6', 'help.photo.tip7'] as const).map((k) => (
               <li key={k}>
                 <Icon name="check-circle" size={20} />
                 <span>{t(k)}</span>
               </li>
             ))}
-          </ul>
+          </ol>
         </Card>
       </main>
     </div>

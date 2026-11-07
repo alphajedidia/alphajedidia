@@ -37,7 +37,7 @@ describe('dictionaries', () => {
 
   it('translate every OCR warning and uncertain reason (docs/OCR.md §1)', () => {
     const warnings = ['no-text-found', 'no-music-found', 'low-resolution', 'alignment-poor', 'beat-count-mismatch', 'music-read-as-text', 'handwriting-mode'];
-    const reasons = ['low-confidence', 'corrected-letter', 'unread-glyph', 'inserted-separator', 'dropped-separator', 'corrected-separator', 'bar-as-lah', 'lah-as-bar', 'dot-or-comma', 'semicolon-as-colon', 'comma-position', 'stray-mark', 'text-fallback'];
+    const reasons = ['low-confidence', 'corrected-letter', 'unread-glyph', 'inserted-separator', 'dropped-separator', 'corrected-separator', 'bar-as-lah', 'lah-as-bar', 'dot-or-comma', 'semicolon-as-colon', 'comma-position', 'stray-mark', 'text-fallback', 'lah-as-medium', 'merged-colon', 'glued-octave'];
     for (const w of warnings) expect(Object.keys(en)).toContain(`ocrWarn.${w}`);
     for (const r of reasons) expect(Object.keys(en)).toContain(`ocrReason.${r}`);
   });
