@@ -90,3 +90,22 @@ describe('pixels', () => {
     expect(estimateSkew(blank(50, 50))).toEqual({ angle: 0, confidence: 0 });
   });
 });
+
+describe('pixels — noise', () => {
+  it('estimates noise and smooths it away with a box blur', async () => {
+    const { boxBlur, estimateNoise } = await import('./pixels');
+    const w = 120;
+    const h = 80;
+    const data = new Uint8Array(w * h);
+    let s = 7;
+    const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+    for (let i = 0; i < data.length; i++) data[i] = Math.max(0, Math.min(255, Math.round(200 + (rnd() + rnd() + rnd() - 1.5) * 50)));
+    const noisy = { width: w, height: h, data };
+    const sigma = estimateNoise(noisy);
+    expect(sigma).toBeGreaterThan(10);
+    const smooth = boxBlur(noisy, 2);
+    expect(estimateNoise(smooth)).toBeLessThan(sigma / 2);
+    expect(estimateNoise({ width: w, height: h, data: new Uint8Array(w * h).fill(230) })).toBe(0);
+    expect(boxBlur(noisy, 0)).toBe(noisy);
+  });
+});
