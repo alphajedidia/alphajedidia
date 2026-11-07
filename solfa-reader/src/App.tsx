@@ -3,7 +3,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { unlockAudio } from './audio';
 import { ScreenErrorBoundary } from './app/ErrorBoundary';
-import { useLatest } from './app/hooks';
+import { useLatest, useRootCssVar } from './app/hooks';
 import { useRoute } from './app/navigation';
 import { screenKey, type Route } from './app/router';
 import { clearScanSession } from './app/session';
@@ -69,6 +69,17 @@ function Shell() {
   const { settings } = useSettings();
   const tRef = useLatest(t);
   const key = screenKey(route);
+
+  // Lift toasts above each screen's bottom bar / keypad (DESIGN §5.7: 112px on the player).
+  const toastOffset: Partial<Record<Route['name'], string>> = {
+    library: '136px',
+    share: '96px',
+    scan: '96px',
+    play: '112px',
+    new: '270px',
+    edit: '270px',
+  };
+  useRootCssVar('--sr-toast-offset', toastOffset[route.name] ?? '0px');
 
   // Theme: on change, and again after the dev gallery (which sets its own) is left.
   useEffect(() => applyTheme(settings.theme), [settings.theme, route.name]);

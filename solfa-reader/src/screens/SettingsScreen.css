@@ -1,0 +1,25 @@
+/* Settings screen. */
+.sr-settings__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sr-space-2);
+  min-height: var(--sr-touch-md);
+}
+
+.sr-settings__label {
+  font-weight: var(--sr-fw-medium);
+}
+
+.sr-settings__warn {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sr-space-2);
+  color: var(--sr-warning);
+  font-weight: var(--sr-fw-semibold);
+}
+
+.sr-settings__warn > svg {
+  flex: none;
+}

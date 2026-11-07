@@ -44,6 +44,8 @@ export function useTextEditor<E extends Field>(initial: string, opts: { multilin
     pendingSel.current = null;
     try {
       el.setSelectionRange(sel.start, sel.end);
+      // Single-line inputs do not always follow the caret: keep the end of the line in view.
+      if (el instanceof HTMLInputElement && sel.end >= el.value.length) el.scrollLeft = el.scrollWidth;
     } catch {
       // Detached element: ignore.
     }

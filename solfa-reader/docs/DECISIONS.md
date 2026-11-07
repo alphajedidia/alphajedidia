@@ -359,3 +359,54 @@ do not reload the page mid-run). Metric: beat cells (separator + content) after 
 alignment per voice.
 **Consequences.** Repeatable numbers in ≈ 2 minutes, no photos needed; they overstate real-photo
 accuracy (no perspective, no paper texture) — real photos are task X-02.
+
+### ADR-033 — Hash router with a history index; one route per scan step
+*2026-11-07 · accepted · solfa-interface (I-01, I-05)*
+**Context.** Browser back must work (also the Android back gesture), the in-app back arrow must
+not leave the app when a shared link was opened directly, and the scan flow holds large canvases.
+**Decision.** `app/router.ts` parses `#/…` (pure, tested); `app/navigation.ts` pushes entries with
+`history.state = { srIdx }` so the back arrow does `history.back()` only when `srIdx > 0`, else
+replaces with `#/`. The scan flow has one route per step (`#/scan`, `/crop`, `/read`, `/review`);
+canvases and the OCR result travel in an in-memory session (`app/session.ts`), cleared — and the
+OCR worker terminated — when the user leaves the scan routes. Reading → review uses `replace`, so
+back from the review goes to the crop. `#/new` and `#/edit/<id>` share one screen key, so a new
+song that gets its id at the first save keeps its caret and undo history.
+**Consequences.** Back works everywhere; a reload on `#/scan/crop` returns to `#/scan` (the photo
+is not persisted, on purpose: privacy and memory).
+
+### ADR-034 — i18n: flat typed keys, Malagasy bundled, en/fr lazy; diagnostics from codes
+*2026-11-07 · accepted · solfa-interface (I-02)*
+**Decision.** `i18n/en.ts` is the reference (`MessageKey = keyof typeof en`); `mg`/`fr` are typed
+`Messages`, so a missing or extra key is a type error; the test also checks empty strings,
+identical `{placeholders}`, every SOLFA_FORMAT §8 code, every `ShareDecodeError` code and every
+OCR warning / uncertain reason of docs/OCR.md §1. Plurals are `_one`/`_other` pairs chosen with
+`Intl.PluralRules`. Month names live in the dictionaries (Chrome's ICU has no Malagasy dates).
+Malagasy is in the main bundle; English and French are separate chunks loaded on switch. Counts
+of `beat-count-mismatch` / `bar-count-mismatch` are read from the parser's English message
+(fallback: a sentence without numbers) until the parser gives structured params (backlog X-17).
+**Consequences.** First load carries one dictionary (~6 KB gz each); unknown future codes show a
+generic translated sentence instead of English.
+
+### ADR-035 — Editor: plain textarea + underline mirror; keypad state in a ref
+*2026-11-07 · accepted · solfa-interface (I-04)*
+**Decision.** The editor is a `<textarea wrap="off">` (voices stay in columns) over a mirror `div`
+with the same metrics that draws `sr-mark-error`/`sr-mark-warning` underlines in transparent ink.
+`useTextEditor` keeps text + selection in a ref updated synchronously, because the keypad's
+auto-repeating keys call the closure captured at pointer-down (a state read would act on a stale
+render). Undo merges same-kind edits within 1.2 s. The song is autosaved 800 ms after typing stops
+(an untouched template is not saved) and on leaving. Note preview calls `previewNote` inside the
+tap handler with the voice of the caret line and the key of its system.
+**Consequences.** No editor dependency; underlines lag the text by the 250 ms parse debounce.
+
+### ADR-036 — Test ids on design-system internals through the DOM; UI prefs key
+*2026-11-07 · accepted · solfa-interface*
+**Context.** The orchestrator's e2e needs ids on elements rendered inside `TransportBar`,
+`VoiceMixerRow`, `Chip` and `SegmentedControl`, which do not forward extra props; the score text
+size is not part of `AppSettings`.
+**Decision.** `useTestIds(ref, selector, ids)` sets `data-testid` after each commit (attributes
+React does not manage survive re-renders) — a stopgap until the components forward them (X-18).
+Text size and "OCR engine already downloaded" are kept under the storage key `ui:prefs` through
+the public `getStorageBackend()` (X-19). Toasts are lifted per route with `--sr-toast-offset`
+(player 112 px, editor 270 px above the keypad, screens with a bottom bar 96–136 px).
+**Consequences.** Test ids depend on component class names (`.sr-transport__controls`,
+`.sr-mixrow__toggle`); a design refactor must keep them or forward the ids.

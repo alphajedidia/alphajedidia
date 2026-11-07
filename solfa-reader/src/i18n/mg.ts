@@ -24,6 +24,7 @@ export const mg: Messages = {
   'common.more': 'Safidy hafa',
   'common.play': 'Henoy',
   'common.untitled': 'Hira tsy misy lohateny',
+  'common.share': 'Zarao',
   'common.zoomIn': 'Ahalehibeo',
   'common.zoomOut': 'Ahakeliho',
   'common.remove': 'Esory',

@@ -185,7 +185,7 @@ function networkFirstPage(event) {
 async function cacheFirst(event, cacheName) {
   const request = event.request;
   const cache = await caches.open(cacheName);
-  const hit = await cache.match(request);
+  const hit = await cache.match(request, { ignoreVary: true });
   if (hit) return hit;
   const res = await fetch(request);
   if (cacheable(res)) event.waitUntil(put(cacheName, request, res.clone()));
@@ -200,7 +200,7 @@ async function networkThenCache(event) {
     return res;
   } catch (err) {
     const cache = await caches.open(APP_CACHE);
-    const hit = await cache.match(request);
+    const hit = await cache.match(request, { ignoreVary: true });
     if (hit) return hit;
     throw err;
   }

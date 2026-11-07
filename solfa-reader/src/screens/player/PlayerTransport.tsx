@@ -58,7 +58,7 @@ export function PlayerTransport({ player, seq, tempo, busy, loop, onLoopChange, 
     [player, tempo, total],
   );
 
-  useTestIds(rootRef, '.sr-transport__controls > .sr-iconbtn', onLoopChange ? TEST_IDS : TEST_IDS.slice(1));
+  useTestIds(rootRef, '.sr-transport__controls > .sr-iconbtn', TEST_IDS);
   useTestIds(rootRef, '.sr-transport__pos', ['transport-bar']);
 
   const positionText = view.bar === 0 ? t('player.pickup') : t('player.bar', { bar: view.bar, total: lastBar });

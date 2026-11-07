@@ -1,0 +1,11 @@
+/* Shared link preview. */
+.sr-shareopen__actions {
+  max-width: var(--sr-content-max);
+  margin-inline: auto;
+}
+
+@media (max-width: 400px) {
+  .sr-shareopen__actions {
+    flex-direction: column;
+  }
+}

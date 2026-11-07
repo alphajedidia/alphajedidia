@@ -25,6 +25,7 @@ export const en = {
   'common.more': 'More actions',
   'common.play': 'Play',
   'common.untitled': 'Untitled song',
+  'common.share': 'Share',
   'common.zoomIn': 'Zoom in',
   'common.zoomOut': 'Zoom out',
   'common.remove': 'Remove',
@@ -139,7 +140,7 @@ export const en = {
   'keypad.barLine': 'Bar line (|)',
   'keypad.mediumBeat': 'Middle of bar (!)',
   'keypad.doubleBar': 'Double bar (||)',
-  'keypad.voiceLine': 'Start a {voice} line',
+  'keypad.voiceLine': 'New {voice} line',
 
   // ---- Parser diagnostics (SOLFA_FORMAT §8) -------------------------------------------------
   'diag.unknown-char': '“{text}” is not a sol-fa sign.',

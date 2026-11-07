@@ -1,0 +1,80 @@
+/* Player screen. */
+
+.sr-player__transport {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--sr-z-sticky);
+}
+
+.sr-player__skeleton {
+  height: 15rem;
+}
+
+.sr-player__voices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sr-space-2);
+}
+
+.sr-player__label {
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-bold);
+  color: var(--sr-text-muted);
+}
+
+.sr-player__chips {
+  display: flex;
+  gap: var(--sr-space-1);
+}
+
+.sr-player__chips .sr-chip {
+  min-width: var(--sr-touch-min);
+  justify-content: center;
+  font-weight: var(--sr-fw-bold);
+}
+
+.sr-player__loop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sr-space-2);
+}
+
+.sr-player__hint {
+  font-size: var(--sr-fs-sm);
+}
+
+.sr-player__problems .sr-row {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sr-player__problems-text {
+  min-width: 0;
+}
+
+/* Mixer sheet */
+.sr-mixer__legend {
+  font-size: var(--sr-fs-sm);
+}
+
+.sr-mixer__advanced > summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--sr-touch-min);
+  font-weight: var(--sr-fw-semibold);
+  color: var(--sr-brand-text);
+  cursor: pointer;
+}
+
+.sr-mixer__octave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sr-space-2);
+}
+
+.sr-mixer__octave-name {
+  font-weight: var(--sr-fw-semibold);
+}

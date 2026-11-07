@@ -53,22 +53,22 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 ## Wave 2 — Screens (solfa-interface)
 | ID | Task | Status | Acceptance |
 |---|---|---|---|
-| I-01 | App shell: `main.tsx`, `App.tsx`, hash router, theme, language provider, error boundary, toasts, SW registration | todo | all routes reachable; back button works |
-| I-02 | `i18n/`: typed dictionaries `mg` (default), `en`, `fr`; diagnostic-code messages; language switch | todo | test: every key exists in all 3 languages |
-| I-03 | Library (home): songs list, search, new (scan / type / import), samples, delete/rename/duplicate | todo | |
-| I-04 | Editor: text area + `SolfaKeypad`, live diagnostics (tap to jump), preview note, undo/redo, tidy (`formatSolfa`), save, play | todo | |
-| I-05 | Scan flow: camera/file → crop & rotate → progress/cancel → review (PhotoStrip + line editor + uncertain highlights) → save | todo | |
-| I-06 | Player: transport, mixer (volume/mute/solo/focus), tempo, transpose, octave shift, loop bars, count-in, metronome, instrument, ScoreView highlight + auto-scroll, export MIDI/WAV, prefs saved per song | todo | acceptance test 1 of SPEC |
-| I-07 | Share: create link / native share / copy text; open `#/share/…` → preview → save | todo | acceptance test 3 of SPEC |
-| I-08 | Settings (language, theme, default instrument, about) + Help ("how to type sol-fa", photo tips) | todo | |
+| I-01 | App shell: `main.tsx`, `App.tsx`, hash router, theme, language provider, error boundary, toasts, SW registration | done | all routes reachable; back button works — `app/router.ts` + `app/navigation.ts` (history index → in-app back), lazy screens, error boundary per screen, toasts, SW update toast, offline/storage notices, theme + theme-color; tests `router.test.ts`, `navigation.test.ts`, `screens.test.tsx` |
+| I-02 | `i18n/`: typed dictionaries `mg` (default), `en`, `fr`; diagnostic-code messages; language switch | done | test: every key exists in all 3 languages — `i18n.test.ts` (keys, no empty text, same placeholders, all §8 diagnostic codes, share error codes, OCR warning/reason codes); mg bundled, en/fr lazy; native review: X-01 |
+| I-03 | Library (home): songs list, search, new (scan / type / import), samples, delete/rename/duplicate | done | samples seeded once; search; ⋮ sheet: play, edit, share, rename, duplicate, download, delete + undo; open .solfa/.txt file |
+| I-04 | Editor: text area + `SolfaKeypad`, live diagnostics (tap to jump), preview note, undo/redo, tidy (`formatSolfa`), save, play | done | keypad insertion at caret (`useTextEditor`), underline overlay, diagnostics list (tap = select), preview note, undo/redo, Tidy, autosave + Save, Play; keypad fits at 360 px |
+| I-05 | Scan flow: camera/file → crop & rotate → progress/cancel → review (PhotoStrip + line editor + uncertain highlights) → save | done | routes `#/scan`, `/crop`, `/read`, `/review`; crop corners + move + rotate + straighten; 4 stages + Cancel (AbortController); review with PhotoStrip, uncertain highlights (reason as tooltip), line editor with keypad, OCR warnings, problems; verified with a rendered printed page in Chromium |
+| I-06 | Player: transport, mixer (volume/mute/solo/focus), tempo, transpose, octave shift, loop bars, count-in, metronome, instrument, ScoreView highlight + auto-scroll, export MIDI/WAV, prefs saved per song | done | acceptance test 1 of SPEC — highlight via `setCurrentBeat` from `subscribe`, loop by tapping bar numbers, mixer sheet, exports, prefs saved per song (debounced); verified in Chromium (position advances, solo/focus/tempo) |
+| I-07 | Share: create link / native share / copy text; open `#/share/…` → preview → save | done | acceptance test 3 of SPEC — share sheet (native share / copy link / copy text / .solfa); `#/share/…` preview → Play / Save (deduplicated by text); every `ShareDecodeError` code translated; round-trip verified in a fresh browser context |
+| I-08 | Settings (language, theme, default instrument, about) + Help ("how to type sol-fa", photo tips) | done | settings (language, theme, instrument, count-in, text size, restore samples, about) + help with a playable example per rule and photo tips |
 
 ## Wave 3 — Integration & delivery (orchestrator)
 | ID | Task | Status | Acceptance |
 |---|---|---|---|
-| O-01 | Integration review across modules, fix contract mismatches | todo | typecheck/test/build green |
-| O-02 | `tests/e2e`: Playwright smoke (360×740 + desktop): load, open sample, play, edit, share link round-trip, screenshots | todo | `npm run e2e` green |
-| O-03 | `.github/workflows/solfa-reader.yml`: test + build on every push; deploy to GitHub Pages from `master` | todo | workflow valid |
-| O-04 | `README.md`: user guide + how to publish | todo | |
+| O-01 | Integration review across modules, fix contract mismatches | done | typecheck/test/build green |
+| O-02 | `tests/e2e`: Playwright smoke (360×740 + desktop): load, open sample, play, edit, share link round-trip, screenshots | done | `npm run e2e` green |
+| O-03 | `.github/workflows/solfa-reader.yml`: test + build on every push; deploy to GitHub Pages from `master` | done (Actions blocked by GitHub billing lock; Cloudflare used, ADR-027) | workflow valid |
+| O-04 | `README.md`: user guide + how to publish | done | |
 
 ## Backlog (M4 and later)
 | ID | Task | Suggested owner |
@@ -88,3 +88,6 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | X-14 | OCR: move preprocessing + component analysis into a Web Worker (OffscreenCanvas) for slow phones | ai |
 | X-15 | Scan screen: 4-corner crop with perspective correction before OCR | ai + interface |
 | X-16 | OCR on a real mid-range phone: measure time per page (FR-11 < 20 s) | orchestrator + ai |
+| X-17 | `Diagnostic` structured params (counts for `beat-count-mismatch`/`bar-count-mismatch`) — the UI reads them from the English message today | backend |
+| X-18 | `data-testid` / rest-prop passthrough on `TransportBar`, `VoiceMixerRow`, `Chip`, `SegmentedControl` options (interface tags them through the DOM today, `useTestIds`) | design |
+| X-19 | `AppSettings.textSize` in storage (the interface keeps it in its own `ui:prefs` key today) | backend |

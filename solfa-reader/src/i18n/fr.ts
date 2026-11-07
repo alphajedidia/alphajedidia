@@ -23,6 +23,7 @@ export const fr: Messages = {
   'common.more': 'Autres actions',
   'common.play': 'Écouter',
   'common.untitled': 'Chant sans titre',
+  'common.share': 'Partager',
   'common.zoomIn': 'Agrandir',
   'common.zoomOut': 'Réduire',
   'common.remove': 'Retirer',

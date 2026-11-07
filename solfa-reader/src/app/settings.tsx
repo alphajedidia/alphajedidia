@@ -8,9 +8,11 @@ export type TextSize = 'md' | 'lg' | 'xl';
 /** UI-only preferences, kept under their own key in the same storage backend. */
 export interface UiPrefs {
   textSize: TextSize;
+  /** The OCR engine was downloaded once (the "first time: ~7 MB" note is not needed). */
+  ocrReady: boolean;
 }
 
-export const DEFAULT_UI_PREFS: UiPrefs = { textSize: 'md' };
+export const DEFAULT_UI_PREFS: UiPrefs = { textSize: 'md', ocrReady: false };
 const UI_PREFS_KEY = 'ui:prefs';
 
 function isTextSize(v: unknown): v is TextSize {
@@ -21,8 +23,12 @@ function isTextSize(v: unknown): v is TextSize {
 export async function loadUiPrefs(): Promise<UiPrefs> {
   try {
     const v: unknown = await getStorageBackend().get(UI_PREFS_KEY);
-    if (typeof v === 'object' && v !== null && isTextSize((v as UiPrefs).textSize)) {
-      return { textSize: (v as UiPrefs).textSize };
+    if (typeof v === 'object' && v !== null) {
+      const p = v as Partial<Record<keyof UiPrefs, unknown>>;
+      return {
+        textSize: isTextSize(p.textSize) ? p.textSize : DEFAULT_UI_PREFS.textSize,
+        ocrReady: p.ocrReady === true,
+      };
     }
   } catch {
     // Storage unavailable: defaults.

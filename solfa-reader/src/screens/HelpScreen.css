@@ -1,0 +1,10 @@
+/* Help screen. */
+.sr-help__example {
+  margin: 0;
+  padding: var(--sr-space-2) var(--sr-space-3);
+  overflow-x: auto;
+  border-radius: var(--sr-radius-sm);
+  background: var(--sr-surface-2);
+  color: var(--sr-text);
+  white-space: pre;
+}

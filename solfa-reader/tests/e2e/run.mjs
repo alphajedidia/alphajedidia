@@ -146,8 +146,11 @@ async function main() {
       await page.waitForTimeout(4500); // 120 bpm → ≥ 2 bars
       const after = (await page.textContent(tid('transport-bar'))) ?? '';
       assert(before !== after, `bar display did not change while playing ("${before}" → "${after}")`);
-      await page.click(tid('mix-solo-A'));
       await page.click(tid('mix-focus-T'));
+      await page.click(tid('mixer-open'));
+      await page.click(tid('mix-solo-A'));
+      await shot(page, '03b-mixer-360');
+      await page.keyboard.press('Escape');
       await noHorizontalScroll(page);
       await shot(page, '03-player-360');
       await page.click(tid('transport-play')); // pause
@@ -217,7 +220,7 @@ async function main() {
       watchConsole(dp, errors);
       await dp.goto(BASE + '#/');
       await dp.waitForSelector(tid('song-item'));
-      await dp.locator(tid('song-item')).first().click();
+      await dp.locator(tid('song-item')).first().locator('.sr-listitem__main').click();
       await dp.waitForTimeout(800);
       if (await dp.locator(tid('editor-play')).count()) await dp.click(tid('editor-play'));
       await dp.waitForSelector(tid('screen-player'), { timeout: 10000 });

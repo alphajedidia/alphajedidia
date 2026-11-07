@@ -13,14 +13,9 @@ export const DEFAULT_LANG: Lang = 'mg';
 
 export type Params = Readonly<Record<string, string | number>>;
 
+type BaseOf<K> = K extends `${infer B}_one` ? (`${B}_other` extends MessageKey ? B : never) : never;
 /** Keys that come as `<base>_one` / `<base>_other` pairs. */
-export type PluralBase = MessageKey extends infer K
-  ? K extends `${infer B}_one`
-    ? `${B}_other` extends MessageKey
-      ? B
-      : never
-    : never
-  : never;
+export type PluralBase = BaseOf<MessageKey>;
 
 export type TFunction = (key: MessageKey, params?: Params) => string;
 export type TPluralFunction = (base: PluralBase, count: number, params?: Params) => string;
