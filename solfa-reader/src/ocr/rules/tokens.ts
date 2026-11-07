@@ -1,6 +1,6 @@
 // Row items + letter readings → sol-fa tokens of one voice row.
 import type { VoiceId } from '../../core';
-import { bh, cx, type Box } from './geometry';
+import { bh, cx, median, type Box } from './geometry';
 import type { RowItem } from './marks';
 import { normalizeNote, readLabel, type NoteGeometry } from './normalize';
 import type { ClusterReading } from './strip';
@@ -43,6 +43,15 @@ export function buildRowTokens(
   let noteIndex = 0;
   let seenSep = false;
   let labelEnd = -Infinity;
+  // Ascender height of this font: single-component clusters read as `d` or `l`.
+  const asc: number[] = [];
+  let k = 0;
+  for (const it of items) {
+    if (it.kind !== 'note') continue;
+    const t = readings[k++]?.text ?? '';
+    if ((t === 'd' || t === 'l') && it.comps.length === 1) asc.push(bh(it.box));
+  }
+  const refAsc = asc.length >= 2 ? median(asc) : 0;
   for (const it of items) {
     // Punctuation printed right after a label ("S." / "A:") belongs to the label.
     if (label && it.box.x0 - labelEnd <= 0.7 * m.xHeight && (it.kind === 'dot' || it.kind === 'colon' || it.kind === 'comma')) {
@@ -75,9 +84,12 @@ export function buildRowTokens(
       };
       const n = normalizeNote(raw, r ? r.conf : 0, geo);
       // `f` and `t` differ mostly by height: `t` is clearly shorter than the ascender letters.
-      const hr = bh(it.box) / Math.max(1, m.ascHeight);
-      if (n.text === 't' && hr >= 0.97 && it.comps.length === 1) Object.assign(n, { text: 'f', conf: Math.min(n.conf, 0.6), changed: true });
-      else if (n.text === 'f' && hr <= 0.88) Object.assign(n, { text: 't', conf: Math.min(n.conf, 0.6), changed: true });
+      // Compared with the `d`/`l` of the same row (ascender height of this font).
+      if (refAsc > 0 && it.comps.length === 1 && (n.text === 't' || n.text === 'f')) {
+        const hr = bh(it.box) / refAsc;
+        if (n.text === 't' && hr >= 0.96) Object.assign(n, { text: 'f', conf: Math.min(n.conf, 0.6), changed: true });
+        else if (n.text === 'f' && hr <= 0.9) Object.assign(n, { text: 't', conf: Math.min(n.conf, 0.6), changed: true });
+      }
       let reason: string | undefined;
       if (!r || raw === '') reason = 'unread-glyph';
       else if (n.changed) reason = 'corrected-letter';

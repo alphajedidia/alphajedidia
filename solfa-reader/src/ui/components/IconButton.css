@@ -65,3 +65,9 @@
 .sr-iconbtn:disabled {
   opacity: 0.4;
 }
+
+/* Busy (e.g. play pressed, audio starting): keep full colour, show the spinner. */
+.sr-iconbtn[aria-busy='true'] {
+  opacity: 1;
+  cursor: progress;
+}

@@ -3,7 +3,7 @@
 //
 //   node scripts/ocr-bench/run.mjs            # full matrix (clean + degraded)
 //   node scripts/ocr-bench/run.mjs --quick    # clean pages, one font
-//   options: --fixture=<id> --font="<family>" --deg=<name> --no-server --dump --verbose
+//   options: --fixture=<id> --font="<family>" --deg=<name> --no-server --dump --debug --verbose
 //
 // Uses port 5175 (dev server started and stopped by this script unless --no-server).
 import { spawn } from 'node:child_process';
@@ -44,9 +44,9 @@ function cases() {
   const fx = FIXTURES.filter((f) => !args.fixture || f.id === args.fixture);
   const fonts = args.font ? [args.font] : args.quick ? ['DejaVu Serif'] : FONTS;
   for (const f of fx) {
-    if (!args.deg || args.deg === 'clean') {
+    if (!args.deg || String(args.deg).startsWith('clean')) {
       for (const font of fonts) out.push({ set: 'clean', f, style: { font, size: 20, bars: 'text' }, deg: {}, degName: 'clean' });
-      if (!args.quick && !args.font) {
+      if (!args.quick && (!args.font || args.deg)) {
         for (const font of ['Liberation Sans', 'DejaVu Serif']) {
           out.push({ set: 'clean', f, style: { font, size: 20, bars: 'rule' }, deg: {}, degName: 'clean-ruled' });
         }
@@ -61,7 +61,7 @@ function cases() {
       }
     }
   }
-  return out;
+  return args.deg ? out.filter((c) => c.degName === args.deg) : out;
 }
 
 async function waitForServer(url, ms = 30000) {
@@ -127,6 +127,14 @@ async function main() {
       );
       if (args.verbose && row.errors.length) console.log('   ', row.errors.slice(0, 12).join('\n    '));
       if (args.verbose) console.log(res.text);
+      if (args.debug) {
+        mkdirSync(outDir, { recursive: true });
+        const dbg = await ocrPage.evaluate(([d, deg]) => window.__debug(d, deg), [dataUrl, c.deg]);
+        const base = `${c.f.id}__${c.style.font.replace(/\s+/g, '')}__${c.degName}`;
+        writeFileSync(join(outDir, `${base}.debug.png`), Buffer.from(dbg.png.split(',')[1], 'base64'));
+        console.log(JSON.stringify({ charH: dbg.charH, xHeight: dbg.xHeight, rules: dbg.rules, transform: dbg.transform }));
+        for (const r of dbg.rows) console.log(`  ${r.kind.padEnd(5)} y=${r.band.y0}-${r.band.y1} base=${r.metrics.baseline} xh=${r.metrics.xHeight.toFixed(1)} asc=${r.metrics.ascHeight.toFixed(1)} ${r.items}`);
+      }
       if (args.dump) {
         const base = `${c.f.id}__${c.style.font.replace(/\s+/g, '')}__${c.degName}`;
         writeFileSync(join(outDir, `${base}.png`), png);

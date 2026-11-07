@@ -129,6 +129,8 @@ export function splitPageComponents(comps: readonly Component[], charH: number, 
     const h = bh(c);
     if (c.area < minNoise && Math.max(w, h) < Math.max(3, charH * 0.12)) out.noise.push(c);
     else if (h >= 2.6 * charH && w <= Math.max(3, 0.35 * charH) && c.area >= 0.5 * h) out.vertical.push(c);
+    // The heavy stroke of a ruled final double bar is wider but solid.
+    else if (h >= 3.5 * charH && w <= 0.7 * charH && c.area >= 0.85 * w * h) out.vertical.push(c);
     else if (w >= 8 * charH && h <= Math.max(3, 0.3 * charH)) out.horizontal.push(c);
     else out.rest.push(c);
   }

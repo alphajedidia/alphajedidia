@@ -17,13 +17,13 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | B-02 | `core/parser.ts`: `parseSolfa` — headers, systems, labels, separators, beats, divisions, comma rule, chromatics, octave marks, holds/rests, `{}` ignore, words, comments, all diagnostics §8 | todo | every example of SOLFA_FORMAT passes as a test; never throws on random input (fuzz test) |
 | B-03 | `core/format.ts`: `formatSolfa` column alignment per system | todo | idempotent; aligned separators; preserves headers/words/comments |
 | B-04 | `core/sequencer.ts`: `buildSequence` — holds merge, rests, bars, pick-up bar 0, transpose, octave shift, beatsPerBar | todo | tests incl. tied notes across bars and key change between systems |
-| B-05 | `audio/synth.ts`: instruments piano / organ / voice (PeriodicWave + ADSR), voice gain buses | todo | sounds pleasant on a phone speaker; no clicks (ramps) |
-| B-06 | `audio/player.ts`: look-ahead scheduler, play/pause/stop/seek, live tempo, mixer/solo/focus, loop, metronome, count-in, position subscription | todo | pure scheduling logic unit-tested with a fake clock; tempo change mid-play keeps position |
-| B-07 | `audio/preview.ts`: `previewNote` | todo | single short note, reuses AudioContext |
-| B-08 | `audio/export.ts`: `exportMidi` (SMF type 1, 1 track per voice, tempo, names) + `renderWav` (OfflineAudioContext, 16-bit mono) | todo | MIDI bytes test (header, track count, note on/off) |
+| B-05 | `audio/synth.ts`: instruments piano / organ / voice (PeriodicWave + ADSR), voice gain buses | done | sounds pleasant on a phone speaker; no clicks (ramps) |
+| B-06 | `audio/player.ts`: look-ahead scheduler, play/pause/stop/seek, live tempo, mixer/solo/focus, loop, metronome, count-in, position subscription | done | pure scheduling logic unit-tested with a fake clock; tempo change mid-play keeps position |
+| B-07 | `audio/preview.ts`: `previewNote` | done | single short note, reuses AudioContext |
+| B-08 | `audio/export.ts`: `exportMidi` (SMF type 1, 1 track per voice, tempo, names) + `renderWav` (OfflineAudioContext, 16-bit mono) | done | MIDI bytes test (header, track count, note on/off) |
 | B-09 | `storage/`: library + settings (idb-keyval, injectable store for tests), share codec (deflate-raw + base64url, fallback) | todo | round-trip tests; 4-voice song link < 2000 chars |
 | B-10 | `samples/`: 3 original songs (scale exercise; SATB chorale 4/4 in G; 3/4 song in F with pick-up and dotted rhythms) — original compositions only, correct voice-leading | todo | parse with 0 errors/warnings; listed by `listSamples()` |
-| B-11 | `pwa/` + `public/sw.js`: offline cache (app shell network-first, assets + tesseract cache-first, versioned), registration helper, "update available" callback | todo | works from a sub-path; no caching in dev |
+| B-11 | `pwa/` + `public/sw.js`: offline cache (app shell network-first, assets + tesseract cache-first, versioned), registration helper, "update available" callback | done | works from a sub-path; no caching in dev |
 
 ### solfa-ai
 | ID | Task | Status | Acceptance |
@@ -81,3 +81,4 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | X-06 | APK through PWABuilder (Trusted Web Activity) | orchestrator |
 | X-07 | MP3 export (smaller files for WhatsApp) | backend |
 | X-08 | Lyrics aligned under notes | backend + interface |
+| X-09 | Media Session API (lock-screen play/pause, song title) for the player | backend + interface |

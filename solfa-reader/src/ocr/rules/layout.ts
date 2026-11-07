@@ -52,6 +52,8 @@ export function segmentRows(comps: readonly Component[], charH: number): RowBand
   }
   // Assign every component to the nearest band (small marks sit just above/below letters).
   for (const c of comps) {
+    // Very tall blobs (pictures, frames) must not stretch a row over its neighbours.
+    if (bh(c) > 4 * charH) continue;
     const y = cy(c);
     let best: RowBand | null = null;
     let bestD = Infinity;

@@ -104,13 +104,14 @@ export function SolfaSection() {
           textSize={size}
           loop={loop ? { startBeat: 4, endBeat: 8 } : null}
           highlightVoice={focus}
+          autoScroll={state === 'playing'}
           onBeatClick={(beat) => {
             beatRef.current = beat;
             scoreRef.current?.setCurrentBeat(beat);
           }}
         />
         <Specimen label="Pick-up, divided beats, chromatic, key change">
-          <ScoreView song={song2} currentBeat={2} />
+          <ScoreView song={song2} currentBeat={2} autoScroll={false} />
         </Specimen>
       </GallerySection>
 
@@ -189,7 +190,9 @@ export function SolfaSection() {
                   zoomed={i === 1 ? true : undefined}
                 />
                 <p className="sr-solfa-text">
-                  {l.voice}: | m :<span className="sr-uncertain">n</span> :f :s | s :f :m :r |
+                  {l.voice}: {l.text.slice(0, 6)}
+                  <span className="sr-uncertain">{l.text.charAt(6)}</span>
+                  {l.text.slice(7)}
                 </p>
               </div>
             ))}

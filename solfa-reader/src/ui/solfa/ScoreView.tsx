@@ -174,11 +174,19 @@ export function ScoreView({
     [apply],
   );
 
-  // Called by the memoised grid after each of its commits (never per frame): rebuild the
-  // beat → cells index and re-apply the highlight, since a new song or loop may replace cells.
-  const reindex = useCallback(() => {
+  // The memoised grid flags each of its commits (never per frame). The index is rebuilt here,
+  // in ScoreView's own layout effect, because the root ref is attached only after the child's
+  // layout effects have run. A new song or loop may replace cells, so re-apply the highlight.
+  const dirtyRef = useRef(true);
+  const markDirty = useCallback(() => {
+    dirtyRef.current = true;
+  }, []);
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!dirtyRef.current || !root) return;
+    dirtyRef.current = false;
     const index = new Map<number, HTMLElement[]>();
-    rootRef.current?.querySelectorAll<HTMLElement>('.sr-score__cell').forEach((el) => {
+    root.querySelectorAll<HTMLElement>('.sr-score__cell').forEach((el) => {
       const beat = Number(el.dataset.beat);
       const list = index.get(beat);
       if (list) list.push(el);
@@ -188,7 +196,7 @@ export function ScoreView({
     const previous = activeRef.current;
     activeRef.current = null;
     if (previous) apply(previous.beat);
-  }, [apply]);
+  });
 
   useLayoutEffect(() => {
     if (currentBeat !== undefined) apply(currentBeat);
@@ -218,7 +226,7 @@ export function ScoreView({
     showBarNumbers,
     showWords,
     clickable: Boolean(onBeatClick),
-    onCommit: reindex,
+    onCommit: markDirty,
   };
 
   return (

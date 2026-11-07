@@ -2,7 +2,7 @@ import type { StripRect } from '../solfa/PhotoStrip';
 
 export interface DemoPhoto {
   canvas: HTMLCanvasElement;
-  lines: { voice: 'S' | 'A' | 'T' | 'B'; bbox: StripRect }[];
+  lines: { voice: 'S' | 'A' | 'T' | 'B'; text: string; bbox: StripRect }[];
 }
 
 const LINES = [
@@ -38,7 +38,7 @@ export function makeDemoPhoto(): DemoPhoto | null {
   const lines = LINES.map((l, i) => {
     const y = 70 + i * 82;
     ctx.fillText(l.text, 40, y);
-    return { voice: l.voice, bbox: { x: 30, y: y - 28, w: 1110, h: 56 } };
+    return { voice: l.voice, text: l.text, bbox: { x: 30, y: y - 28, w: 1110, h: 56 } };
   });
   ctx.fillStyle = '#5b5348';
   ctx.font = 'italic 28px Georgia, serif';

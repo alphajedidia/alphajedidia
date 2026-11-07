@@ -1,5 +1,6 @@
 // Dev-only page driven by run.mjs: degrade a rendered page image, run the real OCR pipeline.
 import { recognizeSolfa, terminateOcr } from '/src/ocr/index.ts';
+import { debugOverlay } from '/scripts/ocr-bench/debug.js';
 
 const canvasOf = (w, h) => {
   const c = document.createElement('canvas');
@@ -100,4 +101,5 @@ window.__ocr = async (dataUrl, d = {}) => {
   };
 };
 window.__terminate = () => terminateOcr();
+window.__debug = async (dataUrl, d = {}) => debugOverlay(await degrade(await loadDataUrl(dataUrl), d), !!d.handwriting);
 document.getElementById('status').textContent = 'ready';

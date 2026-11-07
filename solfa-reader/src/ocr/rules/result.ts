@@ -41,7 +41,7 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
     const box: Box = { x0: row.band.x0, y0: row.band.y0, x1: row.band.x1, y1: row.band.y1 };
     if (row.kind === 'music') {
       const r = buildRowTokens(row.items, rd.notes.get(row.index) ?? [], row.metrics);
-      music.push({ y: row.band.y0, box, tokens: r.tokens, label: r.label });
+      music.push({ y: row.metrics.baseline - row.metrics.ascHeight, box, tokens: r.tokens, label: r.label });
       continue;
     }
     const t = rd.texts.get(row.index);

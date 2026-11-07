@@ -117,7 +117,7 @@ Documented by the design agent in `docs/DESIGN.md` and exported from `src/ui/ind
 * **Routing**: hash routes (`#/`, `#/scan`, `#/edit/:id`, `#/play/:id`, `#/share/:payload`,
   `#/settings`, `#/help`) → works on any static host without server rewrites.
 * **State**: React state + context; no state library.
-* **Audio**: Web Audio API, look-ahead scheduler (25 ms timer, 100 ms horizon), oscillator
+* **Audio**: Web Audio API, look-ahead scheduler (25 ms timer, 120 ms horizon; 1.5 s when the tab is hidden), oscillator
   synth with `PeriodicWave` timbres + gain envelopes, one `GainNode` per voice.
 * **OCR**: `tesseract.js` (WASM, LSTM) self-hosted under `public/tesseract/`, loaded lazily in a
   Web Worker; our rules in pure TypeScript (unit-testable without a browser).

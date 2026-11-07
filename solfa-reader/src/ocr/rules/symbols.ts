@@ -38,10 +38,10 @@ function letterLike(comps: readonly Component[]): Component[] {
   const big = quantile(comps.map(bh), 0.8);
   // Drop dots, commas and dashes…
   const cand = comps.filter((c) => bh(c) >= 0.4 * big);
-  // …and bar lines: thin strokes clearly taller than the ordinary (wide) letters.
   const wide = cand.filter((c) => bw(c) >= 0.3 * bh(c));
   const ref = median((wide.length ? wide : cand).map(bh));
-  return cand.filter((c) => !(bw(c) < 0.3 * bh(c) && bh(c) > 1.3 * ref));
+  // …apostrophes (short) and bar lines (thin strokes clearly taller than the letters).
+  return cand.filter((c) => bh(c) >= 0.55 * ref && !(bw(c) < 0.3 * bh(c) && bh(c) > 1.3 * ref));
 }
 
 /**

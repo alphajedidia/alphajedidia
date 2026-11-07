@@ -39,10 +39,10 @@ export function LogoMark() {
         stroke="var(--sr-logo-gold)"
         strokeWidth="22"
       />
-      <path d="M214 176h56M298 176h86" stroke="var(--sr-logo-s)" strokeWidth="30" />
-      <path d="M214 232h24M266 232h52M346 232h38" stroke="var(--sr-logo-a)" strokeWidth="30" />
-      <path d="M214 288h86M328 288h56" stroke="var(--sr-logo-t)" strokeWidth="30" />
-      <path d="M214 344h38M280 344h104" stroke="var(--sr-logo-b)" strokeWidth="30" />
+      <path d="M214 176h48M306 176h78" stroke="var(--sr-logo-s)" strokeWidth="30" />
+      <path d="M214 232h18M276 232h34M354 232h30" stroke="var(--sr-logo-a)" strokeWidth="30" />
+      <path d="M214 288h78M336 288h48" stroke="var(--sr-logo-t)" strokeWidth="30" />
+      <path d="M214 344h30M288 344h96" stroke="var(--sr-logo-b)" strokeWidth="30" />
     </g>
   );
 }
