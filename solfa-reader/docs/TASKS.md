@@ -42,13 +42,13 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 ### solfa-design
 | ID | Task | Status | Acceptance |
 |---|---|---|---|
-| D-01 | `ui/tokens.css`: colours (light/dark), 4 voice colours (S/A/T/B, AA contrast), type scale, spacing, radii, elevation, motion | todo | AA contrast verified |
-| D-02 | `ui/base.css`: reset, typography, layout helpers, safe areas, focus rings, reduced motion | todo | |
-| D-03 | Core components: Button, IconButton, Icon set (inline SVG), TopBar, Card, ListItem, Field, Slider, Switch, SegmentedControl, Chip, Sheet, Dialog, Toast, ProgressBar, Spinner, EmptyState, VoiceBadge | todo | keyboard + screen-reader labels; 44 px targets |
-| D-04 | Sol-fa components: `SolfaKeypad`, `ScoreView` (systems/beats from `Song`, highlight current beat, tap bar), `VoiceMixerRow`, `TransportBar`, `PhotoStrip` | todo | presentational only (props in, callbacks out) |
-| D-05 | Brand: name/logo, `public/icons/` (SVG, PNG 192/512, maskable), `public/manifest.webmanifest` | todo | Lighthouse installable |
-| D-06 | `docs/DESIGN.md`: principles, tokens, component catalog with props, wireframes of every screen, microcopy & Malagasy glossary | todo | interface agent can build screens from it |
-| D-07 | `ui/Gallery.tsx`: page showing every component (for review & e2e screenshots) | todo | |
+| D-01 | `ui/tokens.css`: colours (light/dark), 4 voice colours (S/A/T/B, AA contrast), type scale, spacing, radii, elevation, motion | done | AA contrast verified — `tokens.test.ts` (both themes, both dark copies identical); ADR-024 |
+| D-02 | `ui/base.css`: reset, typography, layout helpers, safe areas, focus rings, reduced motion | done | helpers listed in DESIGN.md §3.5 |
+| D-03 | Core components: Button, IconButton, Icon set (inline SVG), TopBar, Card, ListItem, Field, Slider, Switch, SegmentedControl, Chip, Sheet, Dialog, Toast, ProgressBar, Spinner, EmptyState, VoiceBadge | done | keyboard + screen-reader labels; 44 px targets — 56 icons, + List, Logo; tests `components/components.test.tsx`; ADR-026 |
+| D-04 | Sol-fa components: `SolfaKeypad`, `ScoreView` (systems/beats from `Song`, highlight current beat, tap bar), `VoiceMixerRow`, `TransportBar`, `PhotoStrip` | done | presentational only (props in, callbacks out) — ScoreView checked against real `parseSolfa` output; ADR-025 |
+| D-05 | Brand: name/logo, `public/icons/` (SVG, PNG 192/512, maskable), `public/manifest.webmanifest` | done | Lighthouse installable — icons + manifest done; Lighthouse not run (needs build + SW, wave 3) |
+| D-06 | `docs/DESIGN.md`: principles, tokens, component catalog with props, wireframes of every screen, microcopy & Malagasy glossary | done | interface agent can build screens from it — glossary items marked (?) need native review (X-01) |
+| D-07 | `ui/Gallery.tsx`: page showing every component (for review & e2e screenshots) | done | dev entry `gallery.html` (`?theme=light` or `?theme=dark`), sections tagged `data-gallery` |
 
 ## Wave 2 — Screens (solfa-interface)
 | ID | Task | Status | Acceptance |
@@ -84,3 +84,4 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | X-09 | Media Session API (lock-screen play/pause, song title) for the player | backend + interface |
 | X-11 | SOLFA_FORMAT: add a `bad-time` diagnostic code and document "a repeated voice label starts a new system" (ADR-019) — **done** 2026-11-07 (spec §2/§8/§9 updated, parser emits `bad-time`) | orchestrator + backend |
 | X-12 | Native-speaker check of the sample titles/words (`Fanazaram-peo`, `Fiadanana`, `Hira maraina`) | user |
+| X-13 | Lighthouse audit of the built PWA (installable, a11y, tap targets) + per-theme `theme-color` meta and `apple-touch-icon.png` link in index.html | orchestrator + design |

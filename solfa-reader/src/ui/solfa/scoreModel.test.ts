@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import type { Beat } from '../../core';
-import { demoSong, fixtureBeatParts, fixtureBeats, rhythmSong, songFromText } from '../fixtures';
+import { parseSolfa, type Beat } from '../../core';
+import {
+  DEMO_SONG_TEXT,
+  RHYTHM_SONG_TEXT,
+  demoSong,
+  fixtureBeatParts,
+  fixtureBeats,
+  rhythmSong,
+  songFromText,
+} from '../fixtures';
 import { beatText, separatorFor } from './beatText';
 import { buildScoreModel } from './scoreModel';
 
@@ -70,5 +78,36 @@ describe('buildScoreModel', () => {
     expect(model[0]?.keyChanged).toBe(false);
     expect(model[1]?.keyChanged).toBe(true);
     expect(model[0]?.rows.map((r) => r.voice)).toEqual(['S', 'A', 'T', 'B']);
+  });
+
+  it('continues a bar across systems unless the previous line ended with a bar line', () => {
+    const open = buildScoreModel(songFromText('S: | d :r :m\n\nS: f | s :l |'));
+    expect(open[0]?.endSep).toBe('');
+    expect(open[1]?.barAt).toEqual([1, 2, 2]);
+    const closed = buildScoreModel(songFromText('S: | d :r |\n\nS: m :f |'));
+    expect(closed[1]?.bars).toEqual([{ col: 0, bar: 2, beat: 2 }]);
+  });
+
+  it('gives regular bars to a song without bar lines', () => {
+    const song = songFromText('time: 3/4\nS: d :r :m :f :s :l :t');
+    expect(buildScoreModel(song)[0]?.barAt).toEqual([1, 1, 1, 2, 2, 2, 3]);
+  });
+
+  // Integration check with core/parseSolfa (solfa-backend): the real parser's Song must draw
+  // exactly like the fixtures the gallery and these tests use.
+  it.each([
+    ['demo', DEMO_SONG_TEXT],
+    ['rhythm', RHYTHM_SONG_TEXT],
+  ])('draws the parser output of the %s song like the fixture', (_, text) => {
+    const draw = (song: ReturnType<typeof songFromText>) =>
+      buildScoreModel(song).map((sys) => ({
+        bars: sys.barAt,
+        end: sys.endSep,
+        key: sys.keyChanged,
+        rows: sys.rows.map((r) => `${r.voice}:${r.cells.map((c) => c.sep + c.text).join(' ')}`),
+      }));
+    const parsed = parseSolfa(text);
+    expect(parsed.diagnostics.filter((d) => d.severity !== 'info')).toEqual([]);
+    expect(draw(parsed.song)).toEqual(draw(songFromText(text)));
   });
 });

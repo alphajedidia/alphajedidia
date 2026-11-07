@@ -7,7 +7,7 @@ import { assignVoices, classifyRowText, groupSystems } from './layout';
 import { normalizeMusicLine } from './normalize';
 import type { PageAnalysis, PageOptions } from './page';
 import type { ClusterReading } from './strip';
-import { buildRowTokens, completeLabels, tokensFromText, tokenX, type Token } from './tokens';
+import { ascenderReference, buildRowTokens, completeLabels, tokensFromText, tokenX, type Token } from './tokens';
 import type { VoiceId } from '../../core';
 
 export interface EngineReadings {
@@ -38,10 +38,12 @@ export function buildResult(page: PageAnalysis, rd: EngineReadings, opts: PageOp
   const warnings = [...page.warnings];
   const music: MusicRowOut[] = [];
   const texts: { y: number; box: Box; text: string; conf: number; kind: 'words' | 'header' }[] = [];
+  const musicRows = page.rows.filter((r) => r.kind === 'music');
+  const pageAsc = ascenderReference(musicRows.map((r) => ({ items: r.items, readings: rd.notes.get(r.index) ?? [] })));
   for (const row of page.rows) {
     const box: Box = { x0: row.band.x0, y0: row.band.y0, x1: row.band.x1, y1: row.band.y1 };
     if (row.kind === 'music') {
-      const r = buildRowTokens(row.items, rd.notes.get(row.index) ?? [], row.metrics);
+      const r = buildRowTokens(row.items, rd.notes.get(row.index) ?? [], row.metrics, pageAsc);
       music.push({ y: row.metrics.baseline - row.metrics.ascHeight, box, tokens: r.tokens, label: r.label, labelBox: r.labelBox });
       continue;
     }

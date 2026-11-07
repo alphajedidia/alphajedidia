@@ -1,6 +1,6 @@
 // Geometry of symbols relative to the row: baseline, x-height, ascender line (A-05).
 // Sol-fa letters (d r m f s l t, e i a o) have NO descenders, which makes the baseline robust.
-import { bh, bw, cy, median, quantile, twoMeans, type Box, type Component } from './geometry';
+import { bh, bw, cy, median, quantile, twoMeans, weightedMedian, type Box, type Component } from './geometry';
 
 /** Vertical metrics of one text row (pixels, working image space). */
 export interface RowMetrics {
@@ -51,7 +51,11 @@ function letterLike(comps: readonly Component[]): Component[] {
 export function measureRow(comps: readonly Component[], prior?: number): RowMetrics | null {
   const letters = letterLike(comps);
   if (letters.length === 0) return null;
-  const baseline = median(letters.map((c) => c.y1));
+  // Area-weighted: small marks that slipped through (apostrophes) barely count.
+  const baseline = weightedMedian(
+    letters.map((c) => c.y1),
+    letters.map((c) => c.area),
+  );
   // Only letters sitting on the baseline (lyrics rows have descenders g, p, y).
   const tol = Math.max(2, 0.15 * median(letters.map(bh)));
   const onBase = letters.filter((c) => Math.abs(c.y1 - baseline) <= tol);

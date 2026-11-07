@@ -243,3 +243,45 @@ Silent failures confuse users who typed a time signature.
 `time:` is kept, otherwise the time is inferred. `internal-error` is also listed in §8 as the
 parser's safety net.
 **Consequences.** The editor can tell the user exactly which header is wrong.
+
+### ADR-024 — Design tokens: hymn-book palette, ordered voice colours, two dark copies
+*2026-11-07 · accepted · solfa-design (D-01)*
+**Context.** Voice colours must be recognisable everywhere, colour-blind safe and AA in light and
+dark; the theme must follow the phone but also be forced by the app setting. `light-dark()` is
+too new for Chrome Android 100 / Safari iOS 16.
+**Decision.** Cream paper + ink + navy "cover" (`#1f3a5f`, the index.html theme-color) palette.
+Voices: crimson S, amber A, teal T, indigo B, with lightness ordered **A > S > T > B in both
+themes**; the S/A/T/B letter always accompanies the colour. Each voice has a strong colour (text
+and fill), a soft tint and an `--sr-on-voice` text colour. Dark tokens are written twice
+(`@media (prefers-color-scheme: dark) :root:not([data-theme=light])` and
+`:root[data-theme=dark]`); `tokens.test.ts` asserts both copies are identical and computes WCAG
+contrast for every pair the components draw (≥ 4.5 text, ≥ 3 UI parts).
+**Consequences.** All colours are CSS variables (R3.8); adding a token means adding it to all
+three blocks (the test fails otherwise). `meta theme-color` should follow `--sr-topbar-bg`.
+
+### ADR-025 — ScoreView highlighting: memoised grid + `data-current` attribute + handle
+*2026-11-07 · accepted · solfa-design (D-04)*
+**Context.** The player reports its position ~30 times per second; re-rendering hundreds of beat
+cells per frame would stutter on mid-range phones (R3.7).
+**Decision.** ScoreView renders a memoised `ScoreGrid` whose props are plain values (label
+functions are resolved to strings first, the loop is passed as two numbers), so it re-renders
+only when what it draws changes. After each grid commit ScoreView indexes `beat → cells`.
+The current beat is shown by setting a `data-current` attribute on the ≤ 4 cells of the beat
+column — an attribute React does not manage, so a later re-render (e.g. loop change) cannot
+erase it. The highlight is driven either by the `currentBeat` prop or, preferably, by the
+imperative `ref.setCurrentBeat(beat)` called from the player subscription (no React render at
+all). Cells are not focusable; bar-number buttons give keyboard/screen-reader access to seeking.
+**Consequences.** Per frame: one integer comparison; per beat: ≤ 8 attribute writes and at most
+one layout read for auto-scroll. Tested (`ScoreView.test.tsx`: same DOM nodes, grid commit
+count).
+
+### ADR-026 — Native `<dialog>` for Sheet and Dialog; keypad that never takes focus
+*2026-11-07 · accepted · solfa-design (D-03, D-04)*
+**Decision.** `Sheet` and `Dialog` wrap a native `<dialog>` opened with `showModal()` (focus
+trap, top layer, inert page, Esc and the Android back gesture via the `cancel` event), stay
+controlled (`open` + `onClose`), and fall back to the `open` attribute + an Escape handler where
+`showModal` is missing (jsdom, very old engines). `SolfaKeypad` prevents `mousedown` on its keys
+so the textarea keeps focus and caret; ⌫ ◀ ▶ fire on pointer-down and auto-repeat; the
+chromatic key is a one-shot shift showing Curwen spellings (`de re fe se le` / `ra ma la ta`).
+**Consequences.** No focus-trap code to maintain; the editor must set `inputMode="none"` while
+the keypad is shown so the phone keyboard stays closed.

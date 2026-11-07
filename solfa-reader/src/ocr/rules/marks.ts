@@ -1,7 +1,7 @@
 // Turn the connected components of one row into row items (A-06): pair dots into colons,
 // strokes + dots into `!`, i-dots into letters, adjacent bars into double bars, and keep the
 // small marks (dots, commas, apostrophes, dashes) that a text engine tends to drop.
-import { bh, bw, cx, cy, median, union, unionAll, type Box, type Component } from './geometry';
+import { bh, bw, cx, median, union, unionAll, type Box, type Component } from './geometry';
 import { classifyShape, looksLikeLah, type RowMetrics, type Shape, type ShapeOptions } from './symbols';
 
 export type ItemKind =
@@ -58,9 +58,9 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
       if (colon) {
         // The top dot of a colon sits at the x-line and looks like the bottom dot; an apostrophe
         // (octave mark) sits higher, e.g. `d'.r` must not become `d:r`.
-        const mid = (m.baseline - cy(h.c)) / xh;
+        const top = (m.baseline - h.c.y0) / xh;
         const ratio = h.c.area / Math.max(1, low.c.area);
-        if (mid > 1.12 * L || ratio < 0.35 || ratio > 2.8) continue;
+        if (top > 1.15 * L || ratio < 0.35 || ratio > 2.8) continue;
       }
       const dx = Math.abs(cx(h.c) - cx(low.c));
       if (dx > maxDx) continue;

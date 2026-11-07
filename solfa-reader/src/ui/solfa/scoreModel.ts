@@ -35,19 +35,34 @@ export interface ScoreSystemModel {
   words: string[];
   /** True when the key differs from the previous system (shown as "Do = …"). */
   keyChanged: boolean;
-  /** Closing separator drawn after the last beat: "|", "||" (end of song) or "". */
+  /** Closing separator after the last beat: "|", "||" (end of song) or "" (open line). */
   endSep: string;
 }
 
+/** Top voice present in a system (bars are read on it, like the sequencer). */
+function referenceLine(song: Song, system: Song['systems'][number]) {
+  const voice = song.voices.find((v) => system.lines[v]);
+  return voice ? system.lines[voice] : undefined;
+}
+
 /**
- * Turn a parsed Song into display rows. Bars are counted on the top voice of each system,
- * like the sequencer: a pick-up before the first `|` is bar 0.
+ * Turn a parsed Song into display rows. Bar numbers follow ADR-021, like the sequencer: bars
+ * are read on the top voice; a beat starts a bar after `|`, or at the start of a system whose
+ * previous line ended with a bar line; beats before the first bar line are bar 0 (pick-up);
+ * a song without any bar line gets regular bars of `time.beats` (default 4).
  */
 export function buildScoreModel(song: Song): ScoreSystemModel[] {
-  let bar = 0;
   const lastIndex = song.systems.length - 1;
+  const anyBarLine = song.systems.some((sys) =>
+    Object.values(sys.lines).some((line) => line?.beats.some((b) => b.accent === 'bar')),
+  );
+  const beatsPerBar = Math.max(1, song.time?.beats ?? 4);
+  let bar = 0;
+  let previousEndedWithBar = false;
+
   return song.systems.map((system, index) => {
     const voices = song.voices.filter((v) => system.lines[v]);
+    const isLast = index === lastIndex;
     const rows: ScoreRow[] = voices.map((voice) => {
       const beats = system.lines[voice]?.beats ?? [];
       const cells: ScoreCell[] = [];
@@ -62,18 +77,25 @@ export function buildScoreModel(song: Song): ScoreSystemModel[] {
       return { voice, cells };
     });
 
-    const reference = voices[0] ? (system.lines[voices[0]]?.beats ?? []) : [];
+    const reference = referenceLine(song, system);
+    const refBeats = reference?.beats ?? [];
     const bars: ScoreBarMark[] = [];
     const barAt: number[] = [];
-    let hasBarLines = false;
     for (let col = 0; col < system.beatCount; col++) {
-      if (reference[col]?.accent === 'bar') {
+      const absolute = system.startBeat + col;
+      const accent = refBeats[col]?.accent;
+      const starts = anyBarLine
+        ? accent === 'bar' || (col === 0 && index > 0 && accent === 'none' && previousEndedWithBar)
+        : absolute % beatsPerBar === 0;
+      if (starts) {
         bar += 1;
-        hasBarLines = true;
-        bars.push({ col, bar, beat: system.startBeat + col });
+        bars.push({ col, bar, beat: absolute });
       }
       barAt.push(bar);
     }
+    const hasBarLines = refBeats.some((b) => b.accent === 'bar');
+    const endsWithBar = reference?.endsWithBar ?? hasBarLines;
+    previousEndedWithBar = endsWithBar;
 
     const previous = index > 0 ? song.systems[index - 1] : undefined;
     return {
@@ -85,7 +107,7 @@ export function buildScoreModel(song: Song): ScoreSystemModel[] {
       barAt,
       words: system.words,
       keyChanged: previous !== undefined && previous.key.tonic !== system.key.tonic,
-      endSep: index === lastIndex ? '||' : hasBarLines ? '|' : '',
+      endSep: endsWithBar ? (isLast ? '||' : '|') : '',
     };
   });
 }

@@ -39,6 +39,7 @@ export function buildRowTokens(
   items: readonly RowItem[],
   readings: readonly (ClusterReading | undefined)[],
   m: RowMetrics,
+  pageAsc = 0,
 ): VoiceRowTokens {
   const tokens: Token[] = [];
   let label: VoiceId | null = null;
@@ -46,15 +47,7 @@ export function buildRowTokens(
   let noteIndex = 0;
   let seenSep = false;
   let labelEnd = -Infinity;
-  // Ascender height of this font: single-component clusters read as `d` or `l`.
-  const asc: number[] = [];
-  let k = 0;
-  for (const it of items) {
-    if (it.kind !== 'note') continue;
-    const t = readings[k++]?.text ?? '';
-    if ((t === 'd' || t === 'l') && it.comps.length === 1) asc.push(bh(it.box));
-  }
-  const refAsc = asc.length >= 2 ? median(asc) : 0;
+  const refAsc = pageAsc > 0 ? pageAsc : ascenderReference([{ items, readings }]);
   for (const it of items) {
     // Punctuation printed right after a label ("S." / "A:") belongs to the label.
     if (label && it.box.x0 - labelEnd <= 0.7 * m.xHeight && (it.kind === 'dot' || it.kind === 'colon' || it.kind === 'comma')) {
@@ -91,8 +84,8 @@ export function buildRowTokens(
       // Compared with the `d`/`l` of the same row (ascender height of this font).
       if (refAsc > 0 && it.comps.length === 1 && (n.text === 't' || n.text === 'f')) {
         const hr = bh(it.box) / refAsc;
-        if (n.text === 't' && hr >= 0.96) Object.assign(n, { text: 'f', conf: Math.min(n.conf, 0.6), changed: true });
-        else if (n.text === 'f' && hr <= 0.9) Object.assign(n, { text: 't', conf: Math.min(n.conf, 0.6), changed: true });
+        if (n.text === 't' && hr >= 0.95) Object.assign(n, { text: 'f', conf: Math.min(n.conf, 0.6), changed: true });
+        else if (n.text === 'f' && hr <= 0.91) Object.assign(n, { text: 't', conf: Math.min(n.conf, 0.6), changed: true });
       }
       let reason: string | undefined;
       if (!r || raw === '') reason = 'unread-glyph';
@@ -187,4 +180,21 @@ export function completeLabels(rows: VoiceRowTokens[], xh: number): number {
     n++;
   }
   return n;
+}
+
+/**
+ * Ascender height of the font: median height of single-component clusters read as `d` or `l`
+ * (0 when fewer than two). `f` is as tall as `d`; `t` is clearly shorter in every common font.
+ */
+export function ascenderReference(rows: readonly { items: readonly RowItem[]; readings: readonly (ClusterReading | undefined)[] }[]): number {
+  const asc: number[] = [];
+  for (const r of rows) {
+    let k = 0;
+    for (const it of r.items) {
+      if (it.kind !== 'note') continue;
+      const t = r.readings[k++]?.text ?? '';
+      if ((t === 'd' || t === 'l') && it.comps.length === 1) asc.push(bh(it.box));
+    }
+  }
+  return asc.length >= 2 ? median(asc) : 0;
 }

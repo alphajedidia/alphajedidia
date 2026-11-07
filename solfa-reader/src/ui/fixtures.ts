@@ -186,10 +186,12 @@ export function songFromText(text: string): Song {
     }
     const label = LABEL.exec(line);
     const voice = (label?.[1] ?? 'S') as VoiceId;
+    const music = label ? line.slice(label[0].length) : line;
     const voiceLine: VoiceLine = {
       voice,
-      beats: fixtureBeats(label ? line.slice(label[0].length) : line),
+      beats: fixtureBeats(music),
       line: lineNo,
+      endsWithBar: /\|\s*$/.test(music),
     };
     sys.lines[voice] = voiceLine;
     sys.beatCount = Math.max(sys.beatCount, voiceLine.beats.length);
