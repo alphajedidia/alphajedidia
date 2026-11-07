@@ -59,9 +59,20 @@ export function alignSystem(rows: readonly Token[][], xh: number, opts: AlignOpt
   const support = byCol.map((list) => new Set(list.map((s) => s.v)).size);
   const majority = n <= 2 ? 1 : Math.floor(n / 2) + 1;
   const consensus = support.map((s) => s >= majority);
-  const inConsensus = seps.filter((s) => consensus[colOf(s.x)]).length;
-  const quality = inConsensus / seps.length;
+  // Quality: share of separators that at least one other voice confirms.
+  const shared = seps.filter((s) => support[colOf(s.x)] >= 2).length;
+  const quality = shared / seps.length;
   if (quality < 0.6) return sequential(quality);
+  // Dropping a separator merges two cells; if both hold notes the merge would invent an
+  // impossible beat (`d:r` → `dr`), so the voices are kept as read instead.
+  for (const s of seps) {
+    if (consensus[colOf(s.x)] || s.tok.alt === 'l') continue;
+    const row = rows[s.v];
+    const i = row.indexOf(s.tok);
+    const prev = row.slice(0, i).reverse().find((t) => t.kind !== 'mark');
+    const next = row.slice(i + 1).find((t) => t.kind !== 'mark');
+    if (prev?.kind === 'note' && next?.kind === 'note') return sequential(quality);
+  }
 
   const out: Token[][] = rows.map((r) => r.filter((t) => t.kind !== 'sep').map((t) => ({ ...t })));
   // Per voice: which column each of its separators belongs to (one per column).
