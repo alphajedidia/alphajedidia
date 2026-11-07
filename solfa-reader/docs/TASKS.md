@@ -28,16 +28,16 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 ### solfa-ai
 | ID | Task | Status | Acceptance |
 |---|---|---|---|
-| A-01 | `ocr/image.ts`: load (EXIF orientation), rotate, crop, deskew (projection profile ±15°), preprocess (grayscale, contrast, adaptive threshold, scale to target text height) | todo | deskew test on synthetic rotated data |
-| A-02 | `ocr/engine.ts`: lazy Tesseract worker, self-hosted paths (`./tesseract/…`), LSTM only, params/whitelist per pass, progress, abort, terminate | todo | works offline from `public/tesseract`; no CDN URL anywhere |
-| A-03 | `ocr/rules/normalize.ts`: confusion map (`cl→d`, `rn→m`, `5→s`, `1/I/l/|`, `;→:`, quotes→`'`…) with context | todo | table-driven tests |
-| A-04 | `ocr/rules/layout.ts`: rows → music / words / header classification; systems; voice order; key & time detection | todo | tests with fixture OCR results |
-| A-05 | `ocr/rules/symbols.ts`: geometry classification — octave marks vs division comma, `l` vs bar line, colon vs `i`, dots | todo | tests with synthetic boxes |
-| A-06 | `ocr/rules/marks.ts`: recover small marks with connected components on the binarized row image | todo | tests on synthetic bitmaps |
-| A-07 | `ocr/rules/align.ts`: beat-column alignment across voices of a system; insert missing separators; uncertainty | todo | tests: a missing `:` in one voice is restored and flagged |
-| A-08 | `ocr/index.ts`: `recognizeSolfa` assembling aligned canonical text + `lines[bbox]` + `uncertain[]` | todo | output parses with `parseSolfa` |
-| A-09 | `scripts/ocr-bench/`: render synthetic printed pages from samples in Chromium (fonts, blur, noise, rotation), run pipeline in-browser, report cell accuracy | todo | ≥ 90 % beat cells correct on clean synthetic pages; numbers in `docs/OCR.md` |
-| A-10 | Handwriting option (stronger cleaning, looser rules) + `docs/OCR.md` | todo | documented limits |
+| A-01 | `ocr/image.ts`: load (EXIF orientation), rotate, crop, deskew (projection profile ±15°), preprocess (grayscale, contrast, adaptive threshold, scale to target text height) | done — `image.ts` + pure `rules/pixels.ts` (grey, noise-adaptive blur, illumination flattening, Sauvola with running sums, deskew ±15° by baseline projection profile, upscale small text); deskew tested on rotated synthetic rows (0°, 3°, −5.5°, 9°) | deskew test on synthetic rotated data |
+| A-02 | `ocr/engine.ts`: lazy Tesseract worker, self-hosted paths (`./tesseract/…`), LSTM only, params/whitelist per pass, progress, abort, terminate | done — one lazy worker (dynamic import), absolute `./tesseract/…` URLs from `document.baseURI`, LSTM only, PSM 7 + whitelist per pass, dictionaries off, progress, abort (terminate + recreate, verified in Chromium); test asserts no CDN URL in `src/ocr` | works offline from `public/tesseract`; no CDN URL anywhere |
+| A-03 | `ocr/rules/normalize.ts`: confusion map (`cl→d`, `rn→m`, `5→s`, `1/I/l/|`, `;→:`, quotes→`'`…) with context | done — table-driven tests (note confusions, labels, plain-text music lines) | table-driven tests |
+| A-04 | `ocr/rules/layout.ts`: rows → music / words / header classification; systems; voice order; key & time detection | done — `rules/layout.ts`, `rules/header.ts` (key validated with core `parseKey`), `rules/page.ts`; systems from ruled bars / blank gaps (lyrics between voices handled), printed labels | tests with fixture OCR results |
+| A-05 | `ocr/rules/symbols.ts`: geometry classification — octave marks vs division comma, `l` vs bar line, colon vs `i`, dots | done — `rules/symbols.ts`; comma/dot thresholds calibrated on 5 fonts | tests with synthetic boxes |
+| A-06 | `ocr/rules/marks.ts`: recover small marks with connected components on the binarized row image | done — `rules/components.ts` (8-conn. labelling, ruled lines) + `rules/marks.ts` (colon, `!`, `i`, double bar, dot/comma, apostrophe, dash) | tests on synthetic bitmaps |
+| A-07 | `ocr/rules/align.ts`: beat-column alignment across voices of a system; insert missing separators; uncertainty | done — `rules/align.ts`; test: missing `:` restored and flagged `inserted-separator`; safe fallback to reading order | tests: a missing `:` in one voice is restored and flagged |
+| A-08 | `ocr/index.ts`: `recognizeSolfa` assembling aligned canonical text + `lines[bbox]` + `uncertain[]` | done — `recognize.ts` + `rules/result.ts`/`assemble.ts`; output already in `formatSolfa` form; parses with 0 errors/warnings on all 88 printed bench pages + unit test | output parses with `parseSolfa` |
+| A-09 | `scripts/ocr-bench/`: render synthetic printed pages from samples in Chromium (fonts, blur, noise, rotation), run pipeline in-browser, report cell accuracy | done — 99.6 % beat cells on 32 clean pages, 98.7 % on 56 degraded (`docs/OCR.md`) | ≥ 90 % beat cells correct on clean synthetic pages; numbers in `docs/OCR.md` |
+| A-10 | Handwriting option (stronger cleaning, looser rules) + `docs/OCR.md` | done — `handwriting: true` (simulated handwriting 73 % → 83 %); limits + M4 ideas in `docs/OCR.md` | documented limits |
 
 ### solfa-design
 | ID | Task | Status | Acceptance |
@@ -85,3 +85,6 @@ Waves run in order; tasks inside a wave run in parallel (different agents, diffe
 | X-11 | SOLFA_FORMAT: add a `bad-time` diagnostic code and document "a repeated voice label starts a new system" (ADR-019) — **done** 2026-11-07 (spec §2/§8/§9 updated, parser emits `bad-time`) | orchestrator + backend |
 | X-12 | Native-speaker check of the sample titles/words (`Fanazaram-peo`, `Fiadanana`, `Hira maraina`) | user |
 | X-13 | Lighthouse audit of the built PWA (installable, a11y, tap targets) + per-theme `theme-color` meta and `apple-touch-icon.png` link in index.html | orchestrator + design |
+| X-14 | OCR: move preprocessing + component analysis into a Web Worker (OffscreenCanvas) for slow phones | ai |
+| X-15 | Scan screen: 4-corner crop with perspective correction before OCR | ai + interface |
+| X-16 | OCR on a real mid-range phone: measure time per page (FR-11 < 20 s) | orchestrator + ai |

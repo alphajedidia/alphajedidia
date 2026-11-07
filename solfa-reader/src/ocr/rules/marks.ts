@@ -119,7 +119,8 @@ export function groupRowItems(comps: readonly Component[], m: RowMetrics, opts: 
     const desc = (t.c.y1 - ref) / xh;
     const aspect = bh(t.c) / Math.max(1, bw(t.c));
     const comma = desc >= 0.12 * L || (aspect >= 1.45 && desc >= 0.04);
-    const sure = comma ? desc >= 0.2 || aspect >= 1.8 : desc <= 0.06 && aspect <= 1.3;
+    // Measured on 5 fonts: commas reach 0.16–0.33 x-height below the dot line, dots ≤ 0.07.
+    const sure = comma ? desc >= 0.14 * L || aspect >= 1.8 : desc <= 0.08 && aspect <= 1.4;
     t.s = { kind: comma ? 'comma' : 'dot-low', conf: sure ? 0.9 : 0.55 };
   }
   // Bars, merged into double bars when two are close together.

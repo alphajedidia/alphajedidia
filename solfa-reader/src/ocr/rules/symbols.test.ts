@@ -43,6 +43,7 @@ describe('symbols — classifyShape', () => {
     ['! stroke', box(0, 72, 3, 18), 'stroke'],
     ['speck', box(0, 50, 1, 1), 'noise'],
     ['thick final bar', box(0, 60, 9, 50), 'bar'],
+    ['stubby hand-drawn hold dash', box(0, 86, 7, 5), 'dash'],
   ];
   for (const [name, b, kind] of cases) {
     it(`${name} → ${kind}`, () => expect(classifyShape(b, m).kind).toBe(kind));

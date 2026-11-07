@@ -1,6 +1,7 @@
 // Key / time / tempo / title detection in the text rows of a score (part of A-04).
-// The core parser also understands key phrases (parseKey); this small fallback keeps the OCR
-// independent of it and normalises what OCR typically produces ("Doh is G.", "Do = Sol").
+// core's parseKey needs a clean phrase; OCR rows carry noise around it ("Doh is G.   4/4  M. 84"),
+// so the phrase is found here and the result validated with parseKey.
+import { parseKey } from '../../core';
 
 const LATIN: Record<string, string> = { do: 'C', re: 'D', ré: 'D', mi: 'E', fa: 'F', sol: 'G', so: 'G', la: 'A', si: 'B' };
 
@@ -23,11 +24,11 @@ export function detectKey(text: string): string | null {
   for (const re of patterns) {
     const mm = re.exec(t);
     if (!mm) continue;
-    if (mm[1]) return mm[1].toUpperCase() + accidental(mm[2]);
-    if (mm[3]) {
-      const base = LATIN[mm[3].toLowerCase()];
-      if (base) return base + accidental(mm[4]);
-    }
+    let name: string | null = null;
+    if (mm[1]) name = mm[1].toUpperCase() + accidental(mm[2]);
+    else if (mm[3] && LATIN[mm[3].toLowerCase()]) name = LATIN[mm[3].toLowerCase()] + accidental(mm[4]);
+    // The core parser must understand what we write (it is what the player will use).
+    if (name && parseKey(name)) return name;
   }
   return null;
 }

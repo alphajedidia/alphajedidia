@@ -159,7 +159,7 @@ async function main() {
         const base = `${c.f.id}__${c.style.font.replace(/\s+/g, '')}__${c.degName}`;
         writeFileSync(join(outDir, `${base}.debug.png`), Buffer.from(dbg.png.split(',')[1], 'base64'));
         console.log(JSON.stringify({ charH: dbg.charH, xHeight: dbg.xHeight, rules: dbg.rules, transform: dbg.transform }));
-        for (const r of dbg.rows) console.log(`  ${r.kind.padEnd(5)} y=${r.band.y0}-${r.band.y1} base=${r.metrics.baseline} xh=${r.metrics.xHeight.toFixed(1)} asc=${r.metrics.ascHeight.toFixed(1)} ${r.items}`);
+        for (const r of dbg.rows) console.log(`  ${r.kind.padEnd(5)} y=${r.band.y0}-${r.band.y1} base=${r.metrics.baseline} xh=${r.metrics.xHeight.toFixed(1)} asc=${r.metrics.ascHeight.toFixed(1)} ${r.items} ${(r.marks ?? []).join(' ')}`);
       }
       if (args.dump) {
         const base = `${c.f.id}__${c.style.font.replace(/\s+/g, '')}__${c.degName}`;
@@ -171,9 +171,9 @@ async function main() {
     const agg = (list) => {
       const cells = list.reduce((s, r) => s + r.cells, 0);
       const correct = list.reduce((s, r) => s + r.correct, 0);
-      return { n: list.length, cells, acc: cells ? correct / cells : 0, perr: list.filter((r) => r.parseErrors !== 0).length, ms: Math.round(list.reduce((s, r) => s + r.ms, 0) / Math.max(1, list.length)) };
+      return { n: list.length, cells, acc: cells ? correct / cells : 0, perr: list.filter((r) => r.parseErrors !== 0).length, unc: (list.reduce((s, r) => s + r.uncertain, 0) / Math.max(1, list.length)).toFixed(1), ms: Math.round(list.reduce((s, r) => s + r.ms, 0) / Math.max(1, list.length)) };
     };
-    const lines = ['', '| Set | Variant | Pages | Beat cells | Correct | Parse errors | Mean time |', '|---|---|---|---|---|---|---|'];
+    const lines = ['', '| Set | Variant | Pages | Beat cells | Correct | Pages with parse errors | Uncertain spans / page | Mean time |', '|---|---|---|---|---|---|---|---|'];
     const groups = new Map();
     for (const r of rows) {
       const k = `${r.set}|${r.deg}`;
@@ -183,13 +183,13 @@ async function main() {
     for (const [k, list] of groups) {
       const [set, deg] = k.split('|');
       const a = agg(list);
-      lines.push(`| ${set} | ${deg} | ${a.n} | ${a.cells} | ${pct(a.acc)} | ${a.perr} | ${a.ms} ms |`);
+      lines.push(`| ${set} | ${deg} | ${a.n} | ${a.cells} | ${pct(a.acc)} | ${a.perr} | ${a.unc} | ${a.ms} ms |`);
     }
     for (const set of ['clean', 'degraded', 'hand']) {
       const list = rows.filter((r) => r.set === set);
       if (list.length) {
         const a = agg(list);
-        lines.push(`| **${set} total** | | ${a.n} | ${a.cells} | **${pct(a.acc)}** | ${a.perr} | ${a.ms} ms |`);
+        lines.push(`| **${set} total** | | ${a.n} | ${a.cells} | **${pct(a.acc)}** | ${a.perr} | ${a.unc} | ${a.ms} ms |`);
       }
     }
     const fxLines = ['', '| Fixture | Clean pages | Correct (clean) |', '|---|---|---|'];

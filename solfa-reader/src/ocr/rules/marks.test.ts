@@ -37,6 +37,19 @@ describe('marks — grouping components into row items', () => {
     expect(fi.comps.length).toBe(3);
   });
 
+  it('does not take an octave apostrophe above a division dot for a colon', () => {
+    expect(kinds("| d'.r :m |")).toEqual(['bar', 'note', 'apostrophe', 'dot', 'note', 'colon', 'note', 'bar']);
+  });
+
+  it('accepts a squashed colon top (looks like a stubby dash) above a dot', () => {
+    const c = blank(300, 200);
+    drawRow(c, '| d  m |', 10, 120, 20);
+    c.rect(52, 102, 7, 5).rect(53, 116, 4, 4); // squashed top + round bottom between d and m
+    const comps = labelComponents(c).components;
+    const got = groupRowItems(comps, measureRow(comps, 20)!).map((i) => i.kind);
+    expect(got).toEqual(['bar', 'note', 'colon', 'note', 'bar']);
+  });
+
   it('flags a lone `l` that could be a bar line, and counts separators', () => {
     const it2 = items('| l :d |');
     const lah = it2.find((i) => i.kind === 'note')!;

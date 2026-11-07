@@ -35,6 +35,9 @@ export async function debugOverlay(canvas, handwriting = false) {
       band: r.band && { x0: r.band.x0, y0: r.band.y0, x1: r.band.x1, y1: r.band.y1 },
       metrics: r.metrics,
       items: r.items.map((i) => SHORT[i.kind] + (i.double ? '|' : '')).join(''),
+      marks: r.items
+        .filter((i) => i.kind === 'dot' || i.kind === 'comma')
+        .map((i) => `${SHORT[i.kind]}${((i.box.y1 - r.metrics.baseline) / r.metrics.xHeight).toFixed(2)}/${((i.box.y1 - i.box.y0) / Math.max(1, i.box.x1 - i.box.x0)).toFixed(1)}/${i.conf}`),
     });
   }
   return { png: c.toDataURL('image/png'), rows, charH: page.charH, xHeight: page.xHeight, rules: page.verticalRules.length, transform: w.transform };

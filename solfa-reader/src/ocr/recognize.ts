@@ -24,6 +24,26 @@ function abortError(): Error {
   return typeof DOMException !== 'undefined' ? new DOMException('Aborted', 'AbortError') : new Error('Aborted');
 }
 
+/** Reject as soon as the signal aborts (the engine keeps loading in the background). */
+function abortable<T>(p: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return p;
+  if (signal.aborted) return Promise.reject(abortError());
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(abortError());
+    signal.addEventListener('abort', onAbort, { once: true });
+    p.then(
+      (v) => {
+        signal.removeEventListener('abort', onAbort);
+        resolve(v);
+      },
+      (e: unknown) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(e instanceof Error ? e : new Error(String(e)));
+      },
+    );
+  });
+}
+
 /** Crop part of a bitmap (with a white margin), as a new bitmap. */
 function cropBitmap(b: Bitmap, box: Box, pad: number): Bitmap {
   const x0 = Math.max(0, Math.floor(box.x0 - pad));
@@ -119,7 +139,11 @@ export async function recognizeSolfaImpl(image: HTMLCanvasElement, opts: Recogni
 
   // 4. Engine.
   report('loading-engine', 0);
-  await getWorker((p) => report('loading-engine', p.status.startsWith('loading') || p.status.startsWith('initializ') ? p.progress : 1));
+  // Only loading messages are progress of this stage (the engine also logs each recognition).
+  const onEngine = (p: { status: string; progress: number }) => {
+    if (!p.status.startsWith('recogniz')) report('loading-engine', p.progress);
+  };
+  await abortable(getWorker(onEngine), signal);
   report('loading-engine', 1);
   check();
   const readings: EngineReadings = { notes: new Map(), texts: new Map() };

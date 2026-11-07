@@ -297,3 +297,65 @@ The GitHub workflow now runs only for `master`, pull requests and manual runs, s
 pushes stop showing failures; agents run typecheck/tests/build locally before every push.
 GitHub Pages stays possible once the billing lock is lifted.
 **Consequences.** Publishing needs a one-time sign-up on Cloudflare (or Netlify) by the user.
+
+### ADR-028 — OCR: connected components first, Tesseract only reads "letter strips"
+*2026-11-07 · accepted · solfa-ai (A-04…A-08)*
+**Context.** Tesseract reads isolated letters well but drops or confuses the tiny marks that carry
+rhythm and octave (`.` `,` `'` `:`), and reads `l` / `|` / `1` interchangeably. Its page
+segmentation also splits music rows into blocks at the wide gaps between beats.
+**Decision.** Segment the page ourselves: connected components on the binarized image → rows →
+row metrics (baseline, x-height, ascender) → every mark classified by size and position relative
+to the row (pure TS in `src/ocr/rules`). Only the note clusters go to Tesseract: their own pixels
+are copied into a "letter strip" (baseline-aligned, wide gaps, x-height 30 px) read with PSM 7 and
+the whitelist `drmfsltaeioSATB`; header/lyrics rows are read as plain text. Geometry overrides
+the reading where it is more reliable (`l` shape, `f`/`t` height against `d`/`l`).
+**Consequences.** 99.6 % of beat cells on clean synthetic pages, 98.7 % on degraded ones
+(docs/OCR.md). Rules are unit-tested in node. Thresholds are in x-height units, so they hold for
+printed fonts; real handwriting needs a learned classifier (X-04).
+
+### ADR-029 — OCR systems and columns: gaps, ruled bars, majority vote across voices
+*2026-11-07 · accepted · solfa-ai (A-04, A-07)*
+**Context.** Printed sol-fa seldom labels voices; lyrics rows may sit between voices or under the
+system; bar lines may be ruled across the voices.
+**Decision.** Systems: a ruled bar crossing two rows joins them; two ruled rows with no rule and no
+lyrics between them are split; otherwise the largest group size (4, 3, 2) whose breaks fall on
+clearly larger *blank* gaps (lyrics rows subtracted) wins. Voices by order (S A T B), or by printed
+labels (one recognised label fixes the label column of the system). Columns: separators of all
+voices are clustered by x; a column present in a strict majority of voices is restored where it
+is missing (`inserted-separator`), a lone one is dropped or read as `l`; if dropping would merge
+two notes (`d:r` → `dr`), the system is kept in reading order instead (`alignment-poor`).
+**Consequences.** Robust on hymn-book layouts; a system whose voices do not line up is never
+"corrected" into invalid beats. Systems with more than 4 voices are split.
+
+### ADR-030 — OCR output is already in `formatSolfa` form
+*2026-11-07 · accepted · solfa-ai (A-08) · follows ADR-020*
+**Decision.** `recognizeSolfa` writes each system exactly as core's `formatSolfa` would (per-column
+widths, a space after bar lines), words (`W:`) lines after the voice lines of their system, a
+blank line between systems, headers (`title`, `key`, `time`, `tempo`; other header text as `#`
+comments) first. Uncertain spans index this text.
+**Consequences.** "Tidy" in the editor is a no-op on fresh OCR output, so highlighted spans stay
+valid; the benchmark checks `formatSolfa(text) === text` and `parseSolfa` diagnostics on every
+page (0 errors and 0 warnings on all 88 printed pages).
+
+### ADR-031 — Tesseract.js configuration and loading
+*2026-11-07 · accepted · solfa-ai (A-02)*
+**Decision.** One lazy worker, created on the first `recognizeSolfa` (dynamic `import('tesseract.js')`
+inside `engine.ts`, so the OCR chunk has no side effects). `OEM.LSTM_ONLY`, `eng`
+`4.0.0_best_int`, `gzip: true`, `cacheMethod: 'write'`, word lists off (`load_system_dawg`,
+`load_freq_dawg` = 0: lyrics are Malagasy, notes are single letters). Worker, core and language
+URLs are resolved against `document.baseURI` to absolute URLs (the worker runs from a blob URL).
+Cancel = terminate the worker (jobs cannot be cancelled); it is recreated on the next call.
+Noisy images are box-blurred before Sauvola thresholding, by an estimate of the pixel noise.
+**Consequences.** Works offline from `public/tesseract/`, no CDN; first use downloads ≈ 6.8 MB
+(one core + model), then cached by the service worker and IndexedDB.
+
+### ADR-032 — OCR benchmark on synthetic pages rendered in Chromium
+*2026-11-07 · accepted · solfa-ai (A-09)*
+**Decision.** `scripts/ocr-bench/run.mjs` renders fixtures as hymn-book pages (CSS grid, 5 system
+fonts, text or ruled bars, lyrics, labels, simulated handwriting), degrades them in a canvas
+(rotation, blur, noise, JPEG, scale, shading), and runs the real pipeline in a page served by
+Vite on port 5175 with its own config (`vite.bench.config.mjs`: no HMR, so edits by other agents
+do not reload the page mid-run). Metric: beat cells (separator + content) after edit-distance
+alignment per voice.
+**Consequences.** Repeatable numbers in ≈ 2 minutes, no photos needed; they overstate real-photo
+accuracy (no perspective, no paper texture) — real photos are task X-02.
