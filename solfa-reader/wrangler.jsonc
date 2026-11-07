@@ -1,0 +1,10 @@
+// Cloudflare Workers (static assets) deployment — used by "Workers & Pages → Create → Import a
+// repository" with Path = solfa-reader, Build command = npm run build, Deploy = npx wrangler deploy.
+// The Worker name in the Cloudflare dashboard must be "solfa-reader" (same as below).
+{
+  "name": "solfa-reader",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}

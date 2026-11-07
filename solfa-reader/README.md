@@ -44,6 +44,13 @@ builds the site on its own machines:
    `dist`, **Root directory** `solfa-reader`.
 3. *Save and Deploy*. The site appears at `https://<project-name>.pages.dev`; every push updates it.
 
+**Cloudflare Workers (the newer "Import a repository" screen, no branch box)**: Project name
+`solfa-reader`, Build command `npm run build`, Deploy command `npx wrangler deploy`,
+*Advanced settings → Path* `solfa-reader` (read from `solfa-reader/wrangler.jsonc`). It publishes
+the repository's default branch (`master`); to publish this work branch before merging, open the
+Worker → *Settings → Build → Branch control* and set the production branch to
+`claude/solfa-reader-apk-2frj02`, then retry the deployment.
+
 **Netlify (alternative)**: *Add new site → Import an existing project → GitHub →* the repository,
 **Base directory** `solfa-reader` (the rest is read from `solfa-reader/netlify.toml`).
 
