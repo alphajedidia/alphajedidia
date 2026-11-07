@@ -1,0 +1,55 @@
+.sr-voicebadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sr-space-2);
+  min-width: 0;
+  color: var(--sr-text);
+}
+
+.sr-voicebadge__letter {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--sr-radius-sm);
+  border: 2px solid var(--sr-voice);
+  background: var(--sr-voice);
+  color: var(--sr-on-voice);
+  font-weight: var(--sr-fw-bold);
+  font-size: var(--sr-fs-md);
+  line-height: 1;
+}
+
+.sr-voicebadge--sm .sr-voicebadge__letter {
+  width: 24px;
+  height: 24px;
+  font-size: var(--sr-fs-xs);
+  border-radius: 5px;
+}
+
+.sr-voicebadge--lg .sr-voicebadge__letter {
+  width: 40px;
+  height: 40px;
+  font-size: var(--sr-fs-lg);
+  border-radius: var(--sr-radius-md);
+}
+
+.sr-voicebadge--soft .sr-voicebadge__letter {
+  background: var(--sr-voice-soft);
+  border-color: var(--sr-voice-soft);
+  color: var(--sr-voice);
+}
+
+.sr-voicebadge--outline .sr-voicebadge__letter {
+  background: transparent;
+  color: var(--sr-voice);
+}
+
+.sr-voicebadge__name {
+  font-weight: var(--sr-fw-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Solfa Reader</title>
+  <rect width="512" height="512" fill="#1f3a5f"/>
+  <!-- Mark scaled to 80 % around the centre so it stays inside the maskable safe zone (r = 40 %). -->
+  <g transform="translate(256 256) scale(0.8) translate(-254 -256)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M184 132c-26 0-34 14-34 40v40c0 22-10 36-30 44 20 8 30 22 30 44v40c0 26 8 40 34 40" stroke="#e3b448" stroke-width="22"/>
+    <path d="M214 176h56M298 176h86" stroke="#ff98a8" stroke-width="30"/>
+    <path d="M214 232h24M266 232h52M346 232h38" stroke="#ffbe6b" stroke-width="30"/>
+    <path d="M214 288h86M328 288h56" stroke="#3fb8ae" stroke-width="30"/>
+    <path d="M214 344h38M280 344h104" stroke="#958ff0" stroke-width="30"/>
+  </g>
+</svg>

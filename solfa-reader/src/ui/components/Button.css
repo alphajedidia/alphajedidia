@@ -1,0 +1,102 @@
+.sr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sr-space-2);
+  min-width: var(--sr-touch-min);
+  min-height: var(--sr-touch-md);
+  padding: var(--sr-space-2) var(--sr-space-4);
+  border: 1.5px solid transparent;
+  border-radius: var(--sr-radius-md);
+  font-size: var(--sr-fs-md);
+  font-weight: var(--sr-fw-semibold);
+  line-height: var(--sr-lh-tight);
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  touch-action: manipulation;
+  transition:
+    background-color var(--sr-dur-fast) var(--sr-ease),
+    border-color var(--sr-dur-fast) var(--sr-ease),
+    transform var(--sr-dur-fast) var(--sr-ease);
+}
+
+.sr-btn--sm {
+  min-height: var(--sr-touch-min);
+  padding-inline: var(--sr-space-3);
+  font-size: var(--sr-fs-sm);
+}
+
+.sr-btn--lg {
+  min-height: var(--sr-touch-xl);
+  padding-inline: var(--sr-space-5);
+  font-size: var(--sr-fs-lg);
+  border-radius: var(--sr-radius-lg);
+}
+
+.sr-btn--block {
+  display: flex;
+  width: 100%;
+}
+
+.sr-btn__label {
+  min-width: 0;
+}
+
+.sr-btn--primary {
+  background: var(--sr-brand);
+  color: var(--sr-on-brand);
+}
+
+.sr-btn--secondary {
+  background: var(--sr-surface);
+  color: var(--sr-brand-text);
+  border-color: var(--sr-border-strong);
+}
+
+.sr-btn--ghost {
+  background: transparent;
+  color: var(--sr-brand-text);
+}
+
+.sr-btn--danger {
+  background: var(--sr-danger);
+  color: var(--sr-on-danger);
+}
+
+@media (hover: hover) {
+  .sr-btn--primary:hover:not(:disabled) {
+    background: var(--sr-brand-hover);
+  }
+
+  .sr-btn--secondary:hover:not(:disabled),
+  .sr-btn--ghost:hover:not(:disabled) {
+    background: var(--sr-surface-2);
+  }
+
+  .sr-btn--danger:hover:not(:disabled) {
+    background: var(--sr-danger-hover);
+  }
+}
+
+.sr-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.sr-btn--primary:active:not(:disabled) {
+  background: var(--sr-brand-pressed);
+}
+
+.sr-btn--secondary:active:not(:disabled),
+.sr-btn--ghost:active:not(:disabled) {
+  background: var(--sr-surface-3);
+}
+
+.sr-btn:disabled {
+  opacity: 0.45;
+}
+
+.sr-btn.is-loading {
+  opacity: 1;
+  cursor: progress;
+}

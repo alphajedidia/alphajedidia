@@ -1,0 +1,67 @@
+.sr-iconbtn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--sr-touch-min);
+  height: var(--sr-touch-min);
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: var(--sr-radius-pill);
+  background: transparent;
+  color: var(--sr-brand-text);
+  touch-action: manipulation;
+  transition:
+    background-color var(--sr-dur-fast) var(--sr-ease),
+    transform var(--sr-dur-fast) var(--sr-ease);
+}
+
+.sr-iconbtn--lg {
+  width: var(--sr-touch-primary);
+  height: var(--sr-touch-primary);
+}
+
+.sr-iconbtn--xl {
+  width: var(--sr-touch-xl);
+  height: var(--sr-touch-xl);
+}
+
+.sr-iconbtn--secondary {
+  background: var(--sr-surface);
+  border-color: var(--sr-border-strong);
+}
+
+.sr-iconbtn--primary {
+  background: var(--sr-brand);
+  color: var(--sr-on-brand);
+}
+
+.sr-iconbtn--danger {
+  color: var(--sr-danger);
+}
+
+@media (hover: hover) {
+  .sr-iconbtn--ghost:hover:not(:disabled),
+  .sr-iconbtn--secondary:hover:not(:disabled),
+  .sr-iconbtn--danger:hover:not(:disabled) {
+    background: var(--sr-surface-2);
+  }
+
+  .sr-iconbtn--primary:hover:not(:disabled) {
+    background: var(--sr-brand-hover);
+  }
+}
+
+.sr-iconbtn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.sr-iconbtn.is-pressed {
+  background: var(--sr-brand);
+  color: var(--sr-on-brand);
+  border-color: var(--sr-brand);
+}
+
+.sr-iconbtn:disabled {
+  opacity: 0.4;
+}

@@ -1,0 +1,123 @@
+/* The <dialog> fills the viewport (transparent); the panel sits at the bottom. */
+.sr-sheet {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sr-text);
+  overflow: hidden;
+}
+
+.sr-sheet[open] {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sr-sheet::backdrop {
+  background: var(--sr-scrim);
+}
+
+/* Fallback when showModal() is not available: draw our own scrim. */
+.sr-sheet[open]:not(:modal) {
+  position: fixed;
+  inset: 0;
+  z-index: var(--sr-z-overlay);
+  background: var(--sr-scrim);
+}
+
+.sr-sheet__panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 40rem;
+  max-height: calc(100% - var(--sr-safe-top) - 2.5rem);
+  background: var(--sr-surface);
+  border-radius: var(--sr-radius-xl) var(--sr-radius-xl) 0 0;
+  box-shadow: var(--sr-shadow-3);
+  animation: sr-sheet-in var(--sr-dur-slow) var(--sr-ease-out);
+}
+
+.sr-sheet__handle {
+  flex: none;
+  width: 40px;
+  height: 5px;
+  margin: var(--sr-space-2) auto 0;
+  border-radius: var(--sr-radius-pill);
+  background: var(--sr-border-strong);
+  opacity: 0.6;
+}
+
+.sr-sheet__header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sr-space-2);
+  padding: var(--sr-space-1) var(--sr-space-2) var(--sr-space-1) var(--sr-space-4);
+}
+
+.sr-sheet__header--hidden {
+  justify-content: flex-end;
+}
+
+.sr-sheet__title {
+  flex: 1 1 auto;
+  font-size: var(--sr-fs-lg);
+}
+
+.sr-sheet__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sr-space-2) var(--sr-space-4) calc(var(--sr-space-4) + var(--sr-safe-bottom));
+}
+
+.sr-sheet__body--with-footer {
+  padding-bottom: var(--sr-space-4);
+}
+
+.sr-sheet__footer {
+  display: flex;
+  flex: none;
+  gap: var(--sr-space-2);
+  padding: var(--sr-space-3) var(--sr-space-4) calc(var(--sr-space-3) + var(--sr-safe-bottom));
+  border-top: 1px solid var(--sr-border);
+}
+
+.sr-sheet__footer > * {
+  flex: 1 1 0;
+}
+
+@keyframes sr-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (min-width: 48rem) {
+  .sr-sheet[open] {
+    align-items: center;
+  }
+
+  .sr-sheet__panel {
+    border-radius: var(--sr-radius-xl);
+    max-height: min(44rem, calc(100% - 4rem));
+    animation-name: sr-fade-up;
+  }
+
+  .sr-sheet__handle {
+    display: none;
+  }
+}
+
+@keyframes sr-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}

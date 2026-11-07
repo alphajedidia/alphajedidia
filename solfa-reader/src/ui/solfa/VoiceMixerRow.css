@@ -1,0 +1,92 @@
+.sr-mixrow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-1);
+  padding: var(--sr-space-2) 0;
+}
+
+.sr-mixrow + .sr-mixrow {
+  border-top: 1px solid var(--sr-border);
+}
+
+.sr-mixrow__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sr-space-2);
+  min-width: 0;
+}
+
+.sr-mixrow__head > .sr-voicebadge {
+  flex: 1 1 auto;
+  font-size: var(--sr-fs-lg);
+}
+
+.sr-mixrow.is-silent .sr-voicebadge__name {
+  color: var(--sr-text-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.sr-mixrow__toggles {
+  display: flex;
+  flex: none;
+  gap: var(--sr-space-1);
+}
+
+.sr-mixrow__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sr-space-1);
+  min-width: var(--sr-touch-min);
+  height: var(--sr-touch-min);
+  padding: 0 var(--sr-space-2);
+  border: 1.5px solid var(--sr-border-strong);
+  border-radius: var(--sr-radius-pill);
+  background: var(--sr-surface);
+  color: var(--sr-text);
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-semibold);
+  touch-action: manipulation;
+  transition: background-color var(--sr-dur-fast) var(--sr-ease);
+}
+
+.sr-mixrow__toggle.is-pressed {
+  border-color: var(--sr-voice);
+  background: var(--sr-voice);
+  color: var(--sr-on-voice);
+}
+
+@media (hover: hover) {
+  .sr-mixrow__toggle:not(.is-pressed):hover:not(:disabled) {
+    background: var(--sr-surface-2);
+  }
+}
+
+.sr-mixrow__toggle:disabled {
+  opacity: 0.45;
+}
+
+/* Phones: icons only (names are the accessible labels and tooltips); text from 26rem up. */
+.sr-mixrow__toggletext {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 26rem) {
+  .sr-mixrow__toggle {
+    padding-inline: var(--sr-space-3);
+  }
+
+  .sr-mixrow__toggletext {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+}

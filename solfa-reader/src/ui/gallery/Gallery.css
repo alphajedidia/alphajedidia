@@ -1,0 +1,193 @@
+/* Layout of the dev Gallery only. */
+.sr-gallery__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-6);
+  padding-block: var(--sr-space-4) var(--sr-space-7);
+}
+
+.sr-gallery__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-3);
+  scroll-margin-top: calc(var(--sr-topbar-height) + var(--sr-space-4));
+}
+
+.sr-gallery__h2 {
+  padding-bottom: var(--sr-space-2);
+  border-bottom: 2px solid var(--sr-border);
+  font-size: var(--sr-fs-xl);
+}
+
+.sr-gallery__note {
+  margin-top: calc(-1 * var(--sr-space-2));
+  font-size: var(--sr-fs-sm);
+  color: var(--sr-text-muted);
+}
+
+.sr-gallery__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-3);
+  min-width: 0;
+}
+
+.sr-gallery__specimen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-2);
+}
+
+.sr-gallery__label {
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-semibold);
+  color: var(--sr-text-muted);
+}
+
+/* Full-bleed on phones: bars and keypad span the screen like in the app. */
+.sr-gallery__bleed {
+  margin-inline: calc(-1 * var(--sr-gutter));
+}
+
+@media (min-width: 48rem) {
+  .sr-gallery__bleed {
+    margin-inline: 0;
+    border-radius: var(--sr-radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--sr-border);
+  }
+}
+
+.sr-gallery__brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sr-space-4);
+}
+
+.sr-gallery__wordmark {
+  font-size: var(--sr-fs-2xl);
+  font-weight: var(--sr-fw-bold);
+  color: var(--sr-brand-text);
+}
+
+.sr-gallery__swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--sr-space-2);
+}
+
+.sr-gallery__swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--sr-space-2);
+  font-size: var(--sr-fs-xs);
+}
+
+.sr-gallery__chip {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--sr-radius-sm);
+  box-shadow: inset 0 0 0 1px var(--sr-border-strong);
+}
+
+.sr-gallery__voices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--sr-space-2);
+}
+
+.sr-gallery__voice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sr-space-1) var(--sr-space-2);
+  align-items: center;
+  padding: var(--sr-space-2);
+  border-radius: var(--sr-radius-md);
+  background: var(--sr-surface);
+  border: 1px solid var(--sr-border);
+  font-family: var(--sr-font-mono);
+  font-weight: var(--sr-fw-semibold);
+  color: var(--sr-voice);
+}
+
+.sr-gallery__vfill {
+  grid-row: span 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 100%;
+  min-height: 44px;
+  border-radius: var(--sr-radius-sm);
+  background: var(--sr-voice);
+  color: var(--sr-on-voice);
+  font-family: var(--sr-font-sans);
+  font-size: var(--sr-fs-xl);
+}
+
+.sr-gallery__vtext {
+  font-family: var(--sr-font-sans);
+}
+
+.sr-gallery__vsoft,
+.sr-gallery__vloop {
+  padding-inline: var(--sr-space-1);
+  border-radius: 4px;
+}
+
+.sr-gallery__vsoft {
+  background: var(--sr-voice-soft);
+}
+
+.sr-gallery__vloop {
+  background: var(--sr-loop-bg);
+}
+
+.sr-gallery__icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: var(--sr-space-2);
+}
+
+.sr-gallery__icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sr-space-1);
+  padding: var(--sr-space-2) var(--sr-space-1);
+  border-radius: var(--sr-radius-md);
+  background: var(--sr-surface);
+  border: 1px solid var(--sr-border);
+  color: var(--sr-text);
+  font-size: 11px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.sr-gallery__typed {
+  min-height: 4.5rem;
+  margin: 0;
+  padding: var(--sr-space-3);
+  border: 1.5px solid var(--sr-border-strong);
+  border-radius: var(--sr-radius-md);
+  background: var(--sr-surface);
+  white-space: pre-wrap;
+}
+
+.sr-gallery__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  margin-inline: -1px;
+  vertical-align: text-bottom;
+  background: var(--sr-focus);
+}
+
+.sr-gallery__panel {
+  padding: 0 var(--sr-space-4);
+  border-radius: var(--sr-radius-lg);
+  background: var(--sr-surface);
+  border: 1px solid var(--sr-border);
+}

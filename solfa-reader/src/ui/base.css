@@ -1,0 +1,276 @@
+/*
+ * Global base styles (owner: solfa-design, D-02): reset, typography, layout helpers, safe areas,
+ * focus rings, reduced motion, voice scoping classes. Loaded once through `src/ui/index.ts`.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--sr-font-sans);
+  font-size: 100%;
+  line-height: var(--sr-lh-normal);
+  background: var(--sr-bg);
+  color: var(--sr-text);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--sr-bg);
+  color: var(--sr-text);
+  font-size: var(--sr-fs-md);
+  overflow-wrap: break-word;
+}
+
+html.sr-scroll-lock {
+  overflow: hidden;
+}
+
+img,
+svg,
+canvas,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: var(--sr-lh-tight);
+  font-weight: var(--sr-fw-bold);
+}
+
+h1 {
+  font-size: var(--sr-fs-xl);
+}
+
+h2 {
+  font-size: var(--sr-fs-lg);
+}
+
+h3,
+h4 {
+  font-size: var(--sr-fs-md);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--sr-brand-text);
+  text-underline-offset: 0.18em;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+::selection {
+  background: var(--sr-brand-soft);
+  color: var(--sr-text);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Focus: always visible for keyboard users, never for mouse/touch taps. */
+:focus-visible {
+  outline: 3px solid var(--sr-focus);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---------- Helpers ---------- */
+
+.sr-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Centered page column with side gutters that respect notches. */
+.sr-container {
+  width: 100%;
+  max-width: calc(var(--sr-content-max) + 2 * var(--sr-gutter));
+  margin-inline: auto;
+  padding-inline: calc(var(--sr-gutter) + var(--sr-safe-left))
+    calc(var(--sr-gutter) + var(--sr-safe-right));
+}
+
+/* A full-height screen: top bar, scrolling content, optional bottom bar. */
+.sr-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.sr-screen__body {
+  flex: 1 1 auto;
+  padding-block: var(--sr-space-4);
+}
+
+.sr-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-stack-gap, var(--sr-space-4));
+}
+
+.sr-stack--sm {
+  --sr-stack-gap: var(--sr-space-2);
+}
+
+.sr-stack--lg {
+  --sr-stack-gap: var(--sr-space-5);
+}
+
+.sr-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sr-row-gap, var(--sr-space-2));
+}
+
+.sr-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sr-space-2);
+}
+
+.sr-spacer {
+  flex: 1 1 auto;
+}
+
+/* Bottom action area for primary actions (thumb zone), above the home indicator. */
+.sr-bottom-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--sr-z-sticky);
+  padding: var(--sr-space-3) calc(var(--sr-gutter) + var(--sr-safe-right))
+    calc(var(--sr-space-3) + var(--sr-safe-bottom)) calc(var(--sr-gutter) + var(--sr-safe-left));
+  background: var(--sr-surface);
+  border-top: 1px solid var(--sr-border);
+}
+
+.sr-section-title {
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-bold);
+  color: var(--sr-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sr-muted {
+  color: var(--sr-text-muted);
+}
+
+.sr-scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sol-fa text anywhere (editor, review lines, help examples). */
+.sr-solfa-text {
+  font-family: var(--sr-font-mono);
+  font-size: var(--sr-fs-solfa);
+  line-height: 1.6;
+  font-variant-ligatures: none;
+  letter-spacing: 0.02em;
+  tab-size: 4;
+}
+
+/* OCR "please check" characters: tinted + wavy underline (not colour alone). */
+.sr-uncertain {
+  background: var(--sr-uncertain-bg);
+  color: var(--sr-text);
+  text-decoration: underline wavy var(--sr-uncertain-line);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  border-radius: 3px;
+}
+
+/* Diagnostics underline in the editor overlay. */
+.sr-mark-error {
+  text-decoration: underline wavy var(--sr-danger);
+  text-decoration-thickness: 2px;
+}
+
+.sr-mark-warning {
+  text-decoration: underline wavy var(--sr-warning);
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- Voice scoping: sets --sr-voice / --sr-voice-soft for any child ---------- */
+.sr-voice-s {
+  --sr-voice: var(--sr-voice-s);
+  --sr-voice-soft: var(--sr-voice-s-soft);
+}
+
+.sr-voice-a {
+  --sr-voice: var(--sr-voice-a);
+  --sr-voice-soft: var(--sr-voice-a-soft);
+}
+
+.sr-voice-t {
+  --sr-voice: var(--sr-voice-t);
+  --sr-voice-soft: var(--sr-voice-t-soft);
+}
+
+.sr-voice-b {
+  --sr-voice: var(--sr-voice-b);
+  --sr-voice-soft: var(--sr-voice-b-soft);
+}
+
+/* ---------- Reduced motion: no animation, no smooth scrolling ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

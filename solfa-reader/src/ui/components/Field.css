@@ -1,0 +1,104 @@
+.sr-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-1);
+  min-width: 0;
+}
+
+.sr-field__label {
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-semibold);
+  color: var(--sr-text);
+}
+
+.sr-field__inputwrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sr-field__control {
+  width: 100%;
+  min-height: var(--sr-touch-md);
+  padding: var(--sr-space-2) var(--sr-space-3);
+  border: 1.5px solid var(--sr-border-strong);
+  border-radius: var(--sr-radius-md);
+  background: var(--sr-surface);
+  color: var(--sr-text);
+  font-size: var(--sr-fs-md);
+  line-height: var(--sr-lh-normal);
+  transition: border-color var(--sr-dur-fast) var(--sr-ease);
+}
+
+.sr-field__control::placeholder {
+  color: var(--sr-text-muted);
+  opacity: 1;
+}
+
+.sr-field__control:focus-visible,
+.sr-field__control:focus {
+  outline: 3px solid var(--sr-focus);
+  outline-offset: 0;
+  border-color: var(--sr-focus);
+}
+
+.sr-field__control:disabled {
+  opacity: 0.55;
+  background: var(--sr-surface-2);
+}
+
+.sr-field__control--multiline {
+  min-height: 7.5rem;
+  resize: vertical;
+}
+
+.sr-field--mono .sr-field__control {
+  font-family: var(--sr-font-mono);
+  font-size: var(--sr-fs-solfa);
+  line-height: 1.6;
+  font-variant-ligatures: none;
+}
+
+.sr-field--icon .sr-field__control {
+  padding-inline-start: 2.75rem;
+}
+
+.sr-field__icon {
+  position: absolute;
+  inset-inline-start: var(--sr-space-3);
+  color: var(--sr-text-muted);
+  pointer-events: none;
+}
+
+.sr-field--trailing .sr-field__control {
+  padding-inline-end: 3rem;
+}
+
+.sr-field__trailing {
+  position: absolute;
+  inset-inline-end: 2px;
+  display: flex;
+}
+
+.sr-field__hint {
+  font-size: var(--sr-fs-sm);
+  color: var(--sr-text-muted);
+}
+
+.sr-field.is-invalid .sr-field__control {
+  border-color: var(--sr-danger);
+}
+
+.sr-field__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sr-space-1);
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-medium);
+  color: var(--sr-danger);
+}
+
+.sr-field__error .sr-icon {
+  flex: none;
+  margin-top: 1px;
+}

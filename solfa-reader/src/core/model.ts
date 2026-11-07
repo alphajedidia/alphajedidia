@@ -81,6 +81,11 @@ export interface VoiceLine {
   beats: Beat[];
   /** Source line index of this voice line. */
   line: number;
+  /**
+   * True when the line ends with a bar line (`|` or `||`) after its last beat, so the next
+   * system starts a new bar even if its first beat has no `|`. Added by solfa-backend (B-02).
+   */
+  endsWithBar?: boolean;
 }
 
 export interface KeySignature {

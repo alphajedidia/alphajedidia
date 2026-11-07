@@ -1,0 +1,97 @@
+.sr-chip {
+  --sr-chip-bg: var(--sr-surface-2);
+  --sr-chip-fg: var(--sr-text);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sr-space-1);
+  min-height: 30px;
+  max-width: 100%;
+  padding: 2px var(--sr-space-3);
+  border: 1.5px solid transparent;
+  border-radius: var(--sr-radius-pill);
+  background: var(--sr-chip-bg);
+  color: var(--sr-chip-fg);
+  font-size: var(--sr-fs-sm);
+  font-weight: var(--sr-fw-semibold);
+  line-height: var(--sr-lh-tight);
+  white-space: nowrap;
+}
+
+.sr-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-chip--brand {
+  --sr-chip-bg: var(--sr-brand-soft);
+  --sr-chip-fg: var(--sr-brand-text);
+}
+
+.sr-chip--success {
+  --sr-chip-bg: var(--sr-success-soft);
+  --sr-chip-fg: var(--sr-success);
+}
+
+.sr-chip--warning {
+  --sr-chip-bg: var(--sr-warning-soft);
+  --sr-chip-fg: var(--sr-warning);
+}
+
+.sr-chip--danger {
+  --sr-chip-bg: var(--sr-danger-soft);
+  --sr-chip-fg: var(--sr-danger);
+}
+
+.sr-chip--info {
+  --sr-chip-bg: var(--sr-info-soft);
+  --sr-chip-fg: var(--sr-info);
+}
+
+.sr-chip--voice {
+  --sr-chip-bg: var(--sr-voice-soft);
+  --sr-chip-fg: var(--sr-voice);
+}
+
+.sr-chip--interactive {
+  min-height: var(--sr-touch-min);
+  padding-inline: var(--sr-space-4);
+  border-color: var(--sr-border-strong);
+  background: var(--sr-surface);
+  color: var(--sr-text);
+  touch-action: manipulation;
+}
+
+.sr-chip--interactive.is-selected {
+  border-color: var(--sr-chip-fg);
+  background: var(--sr-chip-bg);
+  color: var(--sr-chip-fg);
+}
+
+.sr-chip--interactive.sr-chip--neutral.is-selected {
+  --sr-chip-bg: var(--sr-brand-soft);
+  --sr-chip-fg: var(--sr-brand-text);
+}
+
+@media (hover: hover) {
+  .sr-chip--interactive:not(.is-selected):hover {
+    background: var(--sr-surface-2);
+  }
+}
+
+.sr-chip--removable {
+  padding-inline-end: 0;
+}
+
+.sr-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sr-touch-min);
+  height: var(--sr-touch-min);
+  margin-block: -8px;
+  margin-inline-start: -8px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}

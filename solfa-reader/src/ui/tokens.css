@@ -1,0 +1,291 @@
+/*
+ * Solfa Reader design tokens (owner: solfa-design, D-01). Documented in docs/DESIGN.md.
+ *
+ * Every colour used anywhere in the app comes from a variable below (RULES R3.8).
+ * Theme: follows the system (prefers-color-scheme) unless <html data-theme="light|dark"> forces
+ * it. The dark palette is written twice (media query + attribute) because `light-dark()` is too
+ * new for our target browsers; tokens.test.ts checks that both copies are identical and that
+ * every text/background pair passes WCAG AA.
+ */
+
+/* ---------- Theme-independent tokens ---------- */
+:root {
+  /* Typography: system fonts only (no web-font download). */
+  --sr-font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue',
+    Arial, sans-serif;
+  /* Sol-fa: monospace so beats line up; these faces draw ' , . : clearly. */
+  --sr-font-mono: ui-monospace, 'Roboto Mono', 'Noto Sans Mono', 'DejaVu Sans Mono',
+    'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --sr-fs-xs: 0.8125rem; /* 13px – meta only, never essential */
+  --sr-fs-sm: 0.875rem; /* 14px */
+  --sr-fs-md: 1rem; /* 16px – body, inputs (>= 16px avoids iOS zoom) */
+  --sr-fs-lg: 1.125rem; /* 18px */
+  --sr-fs-xl: 1.375rem; /* 22px – screen titles */
+  --sr-fs-2xl: 1.75rem; /* 28px */
+  --sr-fs-solfa: 1.25rem; /* 20px – sol-fa on phones */
+  --sr-fs-solfa-lg: 1.5rem; /* 24px */
+  --sr-fs-solfa-xl: 1.875rem; /* 30px */
+  --sr-lh-tight: 1.2;
+  --sr-lh-normal: 1.5;
+  --sr-fw-regular: 400;
+  --sr-fw-medium: 500;
+  --sr-fw-semibold: 600;
+  --sr-fw-bold: 700;
+
+  /* Spacing: 4px grid. */
+  --sr-space-1: 0.25rem;
+  --sr-space-2: 0.5rem;
+  --sr-space-3: 0.75rem;
+  --sr-space-4: 1rem;
+  --sr-space-5: 1.5rem;
+  --sr-space-6: 2rem;
+  --sr-space-7: 3rem;
+
+  /* Radii. */
+  --sr-radius-sm: 6px;
+  --sr-radius-md: 10px;
+  --sr-radius-lg: 16px;
+  --sr-radius-xl: 24px;
+  --sr-radius-pill: 999px;
+
+  /* Touch targets. */
+  --sr-touch-min: 44px;
+  --sr-touch-md: 48px;
+  --sr-touch-primary: 52px;
+  --sr-touch-xl: 56px;
+
+  /* Layout. */
+  --sr-gutter: 1rem;
+  --sr-content-max: 46rem;
+  --sr-topbar-height: 56px;
+  --sr-safe-top: env(safe-area-inset-top, 0px);
+  --sr-safe-right: env(safe-area-inset-right, 0px);
+  --sr-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --sr-safe-left: env(safe-area-inset-left, 0px);
+
+  /* Motion (zeroed for prefers-reduced-motion below). */
+  --sr-dur-fast: 120ms;
+  --sr-dur-base: 200ms;
+  --sr-dur-slow: 320ms;
+  --sr-ease: cubic-bezier(0.2, 0, 0, 1);
+  --sr-ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /* Logo / app icon: fixed identity colours, the same in both themes. */
+  --sr-logo-bg: #1f3a5f;
+  --sr-logo-gold: #e3b448;
+  --sr-logo-s: #ff98a8;
+  --sr-logo-a: #ffbe6b;
+  --sr-logo-t: #3fb8ae;
+  --sr-logo-b: #958ff0;
+
+  /* Stacking. */
+  --sr-z-sticky: 10;
+  --sr-z-overlay: 40;
+  --sr-z-toast: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sr-dur-fast: 0ms;
+    --sr-dur-base: 0ms;
+    --sr-dur-slow: 0ms;
+  }
+}
+
+/* ---------- Light theme ("hymn-book page": cream paper, ink, navy cover) ---------- */
+:root {
+  color-scheme: light;
+
+  --sr-bg: #f7f3ea;
+  --sr-surface: #fffdf8;
+  --sr-surface-2: #efe9dc;
+  --sr-surface-3: #e4dccb;
+  --sr-border: #ddd4c2;
+  --sr-border-strong: #857c6c;
+  --sr-text: #1d2330;
+  --sr-text-muted: #5b5649;
+
+  --sr-brand: #1f3a5f;
+  --sr-brand-hover: #2a4a75;
+  --sr-brand-pressed: #162b47;
+  --sr-on-brand: #fdf8ec;
+  --sr-brand-soft: #e2e8f1;
+  --sr-brand-text: #1f3a5f;
+  --sr-gold: #e3b448;
+
+  --sr-topbar-bg: #1f3a5f;
+  --sr-topbar-text: #fdf8ec;
+  --sr-topbar-hover: #2d4b74;
+  --sr-topbar-focus: #e3b448;
+
+  --sr-focus: #1d5fd1;
+  --sr-scrim: rgb(20 23 29 / 0.48);
+
+  --sr-danger: #b3261e;
+  --sr-danger-hover: #9a1f18;
+  --sr-on-danger: #ffffff;
+  --sr-danger-soft: #fbe3df;
+  --sr-warning: #8a4a00;
+  --sr-warning-soft: #fcefd2;
+  --sr-success: #1d6b3a;
+  --sr-success-soft: #dff1e4;
+  --sr-info: #1e5b98;
+  --sr-info-soft: #e1edf9;
+
+  --sr-inverse-bg: #1d2330;
+  --sr-inverse-text: #f7f3ea;
+  --sr-inverse-accent: #f0c968;
+
+  --sr-loop-bg: #e3eaf4;
+  --sr-loop-edge: #1f3a5f;
+  --sr-uncertain-bg: #ffdcbd;
+  --sr-uncertain-line: #c2410c;
+
+  --sr-voice-s: #a81e3c;
+  --sr-voice-s-soft: #fbe4e7;
+  --sr-voice-a: #9a5200;
+  --sr-voice-a-soft: #fbead3;
+  --sr-voice-t: #005a61;
+  --sr-voice-t-soft: #d8efed;
+  --sr-voice-b: #3a2f8f;
+  --sr-voice-b-soft: #e7e4f7;
+  --sr-on-voice: #ffffff;
+
+  --sr-shadow-1: 0 1px 2px rgb(29 35 48 / 0.08), 0 1px 1px rgb(29 35 48 / 0.04);
+  --sr-shadow-2: 0 4px 12px rgb(29 35 48 / 0.1), 0 1px 3px rgb(29 35 48 / 0.08);
+  --sr-shadow-3: 0 16px 40px rgb(29 35 48 / 0.2), 0 2px 6px rgb(29 35 48 / 0.1);
+  --sr-shadow-up: 0 -4px 16px rgb(29 35 48 / 0.08);
+}
+
+/* ---------- Dark theme (evening rehearsal) — copy 1: system setting ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --sr-bg: #14171d;
+    --sr-surface: #1c2028;
+    --sr-surface-2: #262b35;
+    --sr-surface-3: #313744;
+    --sr-border: #343a46;
+    --sr-border-strong: #7d8596;
+    --sr-text: #ece7dc;
+    --sr-text-muted: #b1ab9e;
+
+    --sr-brand: #9cbcec;
+    --sr-brand-hover: #b2cbf1;
+    --sr-brand-pressed: #86a9dd;
+    --sr-on-brand: #0f1a2b;
+    --sr-brand-soft: #24334a;
+    --sr-brand-text: #a9c6f0;
+    --sr-gold: #e3b448;
+
+    --sr-topbar-bg: #1a2638;
+    --sr-topbar-text: #ece7dc;
+    --sr-topbar-hover: #26364e;
+    --sr-topbar-focus: #e3b448;
+
+    --sr-focus: #8db8ff;
+    --sr-scrim: rgb(0 0 0 / 0.6);
+
+    --sr-danger: #ff8f84;
+    --sr-danger-hover: #ffa79e;
+    --sr-on-danger: #2a0d0a;
+    --sr-danger-soft: #3d1d1b;
+    --sr-warning: #f2b65a;
+    --sr-warning-soft: #3a2c12;
+    --sr-success: #7fd49a;
+    --sr-success-soft: #173323;
+    --sr-info: #8ec0f5;
+    --sr-info-soft: #182c42;
+
+    --sr-inverse-bg: #ece7dc;
+    --sr-inverse-text: #14171d;
+    --sr-inverse-accent: #1f3a5f;
+
+    --sr-loop-bg: #1f2c40;
+    --sr-loop-edge: #9cbcec;
+    --sr-uncertain-bg: #5a3315;
+    --sr-uncertain-line: #ff9d5c;
+
+    --sr-voice-s: #ff98a8;
+    --sr-voice-s-soft: #3b1f26;
+    --sr-voice-a: #ffbe6b;
+    --sr-voice-a-soft: #3a2a15;
+    --sr-voice-t: #3fb8ae;
+    --sr-voice-t-soft: #11312f;
+    --sr-voice-b: #958ff0;
+    --sr-voice-b-soft: #28254a;
+    --sr-on-voice: #14171d;
+
+    --sr-shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --sr-shadow-2: 0 4px 12px rgb(0 0 0 / 0.45), 0 1px 3px rgb(0 0 0 / 0.3);
+    --sr-shadow-3: 0 16px 40px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.4);
+    --sr-shadow-up: 0 -4px 16px rgb(0 0 0 / 0.4);
+  }
+}
+
+/* ---------- Dark theme — copy 2: forced by the app setting (keep identical to copy 1) ---------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --sr-bg: #14171d;
+  --sr-surface: #1c2028;
+  --sr-surface-2: #262b35;
+  --sr-surface-3: #313744;
+  --sr-border: #343a46;
+  --sr-border-strong: #7d8596;
+  --sr-text: #ece7dc;
+  --sr-text-muted: #b1ab9e;
+
+  --sr-brand: #9cbcec;
+  --sr-brand-hover: #b2cbf1;
+  --sr-brand-pressed: #86a9dd;
+  --sr-on-brand: #0f1a2b;
+  --sr-brand-soft: #24334a;
+  --sr-brand-text: #a9c6f0;
+  --sr-gold: #e3b448;
+
+  --sr-topbar-bg: #1a2638;
+  --sr-topbar-text: #ece7dc;
+  --sr-topbar-hover: #26364e;
+  --sr-topbar-focus: #e3b448;
+
+  --sr-focus: #8db8ff;
+  --sr-scrim: rgb(0 0 0 / 0.6);
+
+  --sr-danger: #ff8f84;
+  --sr-danger-hover: #ffa79e;
+  --sr-on-danger: #2a0d0a;
+  --sr-danger-soft: #3d1d1b;
+  --sr-warning: #f2b65a;
+  --sr-warning-soft: #3a2c12;
+  --sr-success: #7fd49a;
+  --sr-success-soft: #173323;
+  --sr-info: #8ec0f5;
+  --sr-info-soft: #182c42;
+
+  --sr-inverse-bg: #ece7dc;
+  --sr-inverse-text: #14171d;
+  --sr-inverse-accent: #1f3a5f;
+
+  --sr-loop-bg: #1f2c40;
+  --sr-loop-edge: #9cbcec;
+  --sr-uncertain-bg: #5a3315;
+  --sr-uncertain-line: #ff9d5c;
+
+  --sr-voice-s: #ff98a8;
+  --sr-voice-s-soft: #3b1f26;
+  --sr-voice-a: #ffbe6b;
+  --sr-voice-a-soft: #3a2a15;
+  --sr-voice-t: #3fb8ae;
+  --sr-voice-t-soft: #11312f;
+  --sr-voice-b: #958ff0;
+  --sr-voice-b-soft: #28254a;
+  --sr-on-voice: #14171d;
+
+  --sr-shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --sr-shadow-2: 0 4px 12px rgb(0 0 0 / 0.45), 0 1px 3px rgb(0 0 0 / 0.3);
+  --sr-shadow-3: 0 16px 40px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.4);
+  --sr-shadow-up: 0 -4px 16px rgb(0 0 0 / 0.4);
+}

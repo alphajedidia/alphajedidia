@@ -1,0 +1,66 @@
+.sr-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sr-space-1);
+  min-width: 0;
+}
+
+.sr-progress__head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sr-space-2);
+  font-size: var(--sr-fs-sm);
+}
+
+.sr-progress__label {
+  font-weight: var(--sr-fw-semibold);
+}
+
+.sr-progress__value {
+  color: var(--sr-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-progress__track {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--sr-radius-pill);
+  background: var(--sr-surface-3);
+}
+
+.sr-progress--sm .sr-progress__track {
+  height: 4px;
+}
+
+.sr-progress__bar {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--sr-brand);
+  transform-origin: left center;
+  transform: scaleX(var(--sr-progress, 0));
+  transition: transform var(--sr-dur-base) var(--sr-ease);
+}
+
+.sr-progress.is-indeterminate .sr-progress__bar {
+  width: 40%;
+  transform: none;
+  animation: sr-progress-slide 1.4s var(--sr-ease) infinite;
+}
+
+@keyframes sr-progress-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sr-progress.is-indeterminate .sr-progress__bar {
+    width: 100%;
+    opacity: 0.5;
+  }
+}
